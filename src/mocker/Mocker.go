@@ -4,21 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
-	"mocklistner/config"
-	"mocklistner/mock"
+	"mocker/config"
+	"mocker/mock"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var models []mock.RequestModelGroup
 var configuration config.Config
 
-func main() {
-	log.Println("Start")
+const update = "update_models"
 
+func main() {
 	conf, err := config.LoadConfig(os.Args[1])
 
 	if err != nil {
@@ -27,6 +29,8 @@ func main() {
 
 	configuration = conf
 
+	configureLog(&conf)
+
 	updateModels()
 
 	http.HandleFunc("/", handler)
@@ -34,15 +38,33 @@ func main() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", conf.Port), nil))
 }
 
+func configureLog(config *config.Config) {
+	fmt.Println(config)
+	file, err := os.OpenFile(config.LogsPath, os.O_RDWR, os.ModePerm)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"Action": "Not Found Log",
+		}).Panic()
+	}
+
+	log.SetFormatter(&logrus.TextFormatter{})
+	log.SetOutput(file)
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	log.Println(r.URL.String())
+	var fields = log.Fields{}
+	fields["Request URL"] = r.URL
+	fields["Request Method"] = r.Method
 
-	if strings.Compare(r.URL.String(), "/update_models") == 0 {
+	if strings.Compare(r.URL.String(), update) == 0 {
 		err := updateModels()
 		if err != nil {
-
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"message": "Cant update models"})
+			log.WithFields(fields).Warn("Can't update models!")
 		}
 		return
 	}
@@ -50,19 +72,23 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	item := mock.FindGroupByURL(&models, r.URL.String(), r.Method)
 
 	if item == nil {
-		log.Println("NOT FOUND GROUP", r.URL)
+		log.WithFields(fields).Warn("Not found any group")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "not found mock for url" + r.URL.String()})
 		return
 	}
 
 	next := item.Next()
 
 	if next == nil {
-		log.Println("GROUP IS EMPTY", r.URL)
+		fields["Group URL"] = item.URL
+		fields["Group Method"] = item.Method
+		log.WithFields(fields).Warn("Not found any group")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"message": "not found mock for url" + r.URL.String()})
 		return
 	}
-
+	w.WriteHeader(next.StatusCode)
 	json.NewEncoder(w).Encode(next.Response)
 }
 

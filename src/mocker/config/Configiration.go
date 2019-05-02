@@ -11,6 +11,7 @@ import (
 type Config struct {
 	MocksRootDir string `json:"mocksRootDir"`
 	Port         int    `json:"Port"`
+	LogsPath     string `json:"logPath"`
 }
 
 // LoadConfig load config by filepath
@@ -29,6 +30,7 @@ func LoadConfig(filePath string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+
 	var abs string
 	abs, err = filepath.Abs(conf.MocksRootDir)
 
@@ -37,5 +39,14 @@ func LoadConfig(filePath string) (Config, error) {
 	}
 
 	conf.MocksRootDir = abs
+
+	abs, err = filepath.Abs(conf.LogsPath)
+
+	if err != nil {
+		return Config{}, err
+	}
+
+	conf.LogsPath = abs
+
 	return conf, nil
 }
