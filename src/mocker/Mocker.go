@@ -18,7 +18,7 @@ import (
 var models []mock.RequestModelGroup
 var configuration config.Config
 
-const update = "update_models"
+const update = "/update_models"
 
 func main() {
 	conf, err := config.LoadConfig(os.Args[1])
@@ -92,6 +92,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fields["Response URL"] = next.URL
 	fields["Response Method"] = next.Method
 	fields["Status code"] = next.StatusCode
+
+	log.WithFields(fields).Info("Was Sended")
 
 	w.WriteHeader(next.StatusCode)
 	json.NewEncoder(w).Encode(next.Response)
