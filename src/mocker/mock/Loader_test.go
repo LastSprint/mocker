@@ -2,7 +2,6 @@ package mock
 
 import "testing"
 
-// TestSimpleUrlComparasionSuccess tests that `path/path/path` equals to `path/path/path`
 func TestSimpleUrlComparasionSuccess(t *testing.T) {
 
 	// Arrange
@@ -28,7 +27,6 @@ func TestSimpleUrlComparasionSuccess(t *testing.T) {
 	)
 }
 
-// TestSimpleUrlComparasionFailure test that `temp/path/to` NOT equals to `to/temp/path`
 func TestSimpleUrlComparasionFailure(t *testing.T) {
 	// Arrange
 
@@ -53,7 +51,6 @@ func TestSimpleUrlComparasionFailure(t *testing.T) {
 	)
 }
 
-// TestPathPatternMatchingWorkSuccess test that `/request/url/1` equals to `request/url/{id}`
 func TestPathPatternMatchingWorkSuccess(t *testing.T) {
 	// Arrange
 
@@ -67,6 +64,80 @@ func TestPathPatternMatchingWorkSuccess(t *testing.T) {
 	// Assert
 
 	if comparasionResult {
+		return
+	}
+
+	t.Error(
+		"Arrange: ", []string{lhs, rhs},
+		"Act: ", "CompareURLPath",
+		"Assert: ", comparasionResult,
+		"Awaiting: ", !comparasionResult,
+	)
+}
+
+func TestPathWithDifferentNumberFailure(t *testing.T) {
+	// Arrange
+
+	lhs := "temp/path/to"
+	rhs := "to/temp"
+
+	// Act
+
+	comparasionResult := CompareURLPath(lhs, rhs)
+
+	// Assert
+
+	if !comparasionResult {
+		return
+	}
+
+	t.Error(
+		"Arrange: ", []string{lhs, rhs},
+		"Act: ", "CompareURLPath",
+		"Assert: ", comparasionResult,
+		"Awaiting: ", !comparasionResult,
+	)
+}
+
+func TestSamePatternInPathAndInParamsMatchSuccess(t *testing.T) {
+
+	// Arrange
+
+	lhs := "temp/{id}/to?foo={foo}&bar={bar}"
+	rhs := "temp/{id}/to?foo={foo}&bar={bar}"
+
+	// Act
+
+	comparasionResult := CompareURLPath(lhs, rhs)
+
+	// Assert
+
+	if comparasionResult {
+		return
+	}
+
+	t.Error(
+		"Arrange: ", []string{lhs, rhs},
+		"Act: ", "CompareURLPath",
+		"Assert: ", comparasionResult,
+		"Awaiting: ", !comparasionResult,
+	)
+}
+
+func TestDifferentPatternInPathAndInParamsMatchFailure(t *testing.T) {
+
+	// Arrange
+
+	lhs := "temp/{id}/to?foo={foo}"
+	rhs := "temp/{id}/to?foo={foo}&bar={bar}"
+
+	// Act
+
+	comparasionResult := CompareURLPath(lhs, rhs)
+
+	// Assert
+
+	if !comparasionResult {
 		return
 	}
 

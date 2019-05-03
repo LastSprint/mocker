@@ -88,6 +88,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"message": "not found mock for url" + r.URL.String()})
 		return
 	}
+
 	w.WriteHeader(next.StatusCode)
 	json.NewEncoder(w).Encode(next.Response)
 }
