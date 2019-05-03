@@ -89,6 +89,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fields["Response URL"] = next.URL
+	fields["Response Method"] = next.Method
+	fields["Status code"] = next.StatusCode
+
 	w.WriteHeader(next.StatusCode)
 	json.NewEncoder(w).Encode(next.Response)
 }
