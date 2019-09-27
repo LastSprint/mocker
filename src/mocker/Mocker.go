@@ -40,7 +40,7 @@ func main() {
 
 func configureLog(config *config.Config) {
 	fmt.Println(config)
-	file, err := os.OpenFile(config.LogsPath, os.O_RDWR, os.ModePerm)
+	file, err := os.OpenFile(config.LogsPath, os.O_RDWR|os.O_CREATE, os.ModePerm)
 
 	if err != nil {
 		log.WithFields(log.Fields{
