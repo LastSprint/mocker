@@ -1,0 +1,5 @@
+{
+    "mocksRootDir": "/mocks",
+    "port": 1111,
+    "logPath": "/var/log/mocker.log"
+}
