@@ -1,7 +1,10 @@
 package mock
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
+	"reflect"
 	"strings"
 )
 
@@ -10,6 +13,7 @@ type RequestModel struct {
 	Response   interface{} `json:"response"`
 	Method     string      `json:"method"`
 	StatusCode int         `json:"statusCode"`
+	Request    interface{} `json:"request"`
 }
 
 type RequestModelGroup struct {
@@ -74,4 +78,41 @@ func MakeGroups(allMocks []RequestModel) []RequestModelGroup {
 	}
 
 	return result
+}
+
+// CompareByRequest работает следующим образом:
+// - Если `RequestModel.Request` == nil -> false
+// - Если при маршалинге `RequestModel.Request` произошла ошибка -> false
+// - Если байтовое представление данных не одинаково -> false
+// ------
+// - Parameters:
+//	- requestData: "сырое" бинарное представление тела запроса.
+func (model *RequestModel) CompareByRequest(requestData []byte) bool {
+
+	if model.Request == nil {
+		return false
+	}
+
+	modeRequestData, err := json.Marshal(model.Request)
+
+	var bytes interface{}
+
+	json.Unmarshal(requestData, &bytes)
+	fmt.Println(model.Request)
+	fmt.Println(bytes)
+	if err != nil {
+		return false
+	}
+
+	return reflect.DeepEqual(modeRequestData, requestData)
+}
+
+func (group *RequestModelGroup) CompareByRequest(requestData []byte) *RequestModel {
+	for index := 0; index < len(group.models); index++ {
+
+		if group.models[index].CompareByRequest(requestData) {
+			return &group.models[index]
+		}
+	}
+	return nil
 }

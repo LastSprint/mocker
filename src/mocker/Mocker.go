@@ -78,7 +78,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	next := item.Next()
+	var next *mock.RequestModel
+
+	body, err := ioutil.ReadAll(r.Body)
+
+	if err == nil {
+		next = item.CompareByRequest(body)
+	}
+
+	if next == nil {
+		next = item.Next()
+	}
 
 	if next == nil {
 		fields["Group URL"] = item.URL
