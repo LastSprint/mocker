@@ -16,10 +16,11 @@
 Моковые файлы представляют из себя `Json` формата:
 ```
  {
-    "url": string
-    "method": string
-    "statusCode": int
-    "response": object
+    "url": string,
+    "method": string,
+    "statusCode": int,
+    "response": object,
+    "request": object
  }
 ```
 
@@ -46,6 +47,66 @@
 ### Response
 
 Это поле содержит `Json`, который вернется в ответ на запрос. 
+
+### Request
+
+Это поле содержит данные для проверки. 
+
+Когда приходит запрос сервис пытается извлечь из него тело. 
+
+Если ему это удается, то он выполняет поиск нужной группы моков (по URL и http-методу).
+
+Затем сервис сравнивает `request.body` и `mock.request`. Если он находит подходящий мок, то возращает его. Иначе следует стандартной стратегии.
+
+То есть это поле нужно для того, чтобы связать запрос с ответом в том числе с помощью матчинга тела запроса. 
+
+Таким образом пользователь может задать два разных мока на два разных тела запроса и всегда получит конкретный мок. 
+
+<details>
+ 
+<summary>Пример</summary>
+
+mock1.json:
+
+```json
+{
+ "url": "/exmp",
+ "method": "POST",
+ "statusCode": 200,
+ "request": {
+  "login": "valid",
+  "password": "valid"
+ },
+ "response": {
+  "accessToken": "token==",
+  "refreshToken": "refresh"
+ }
+}
+```
+
+mock2.json:
+
+```json
+{
+ "url": "/exmp",
+ "method": "POST",
+ "statusCode": 400,
+ "request": {
+  "login": "valid",
+  "password": "invalid"
+ },
+ "response": {
+  "code": 1,
+  "message": "Bad Credentials"
+ }
+}
+```
+
+В случае если в теле запроса `password == valid`, то вернется 200й код.
+А если `password == invalid`, то вернется 400й код. 
+В противном случае ответы будут возвращаться итеративно. 
+
+</details>
 
 ## Конфигурация
 
