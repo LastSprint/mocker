@@ -1,5 +1,0 @@
-{
-    "mocksRootDir": "mocks/",
-    "port": 8822,
-    "logPath": "logs.json"
-}
