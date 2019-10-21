@@ -61,6 +61,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if strings.Compare(r.URL.String(), update) == 0 {
 		err := updateModels()
+
+		log.WithFields(log.Fields{
+			"key":   "analytics",
+			"event": "update_models",
+		})
+
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{"message": "Cant update models"})
@@ -72,6 +78,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	item := mock.FindGroupByURL(&models, r.URL.String(), r.Method)
 
 	if item == nil {
+
+		log.WithFields(log.Fields{
+			"key":   "analytics",
+			"event": "get_mock",
+			"payload": logrus.Fields{
+				"success": false,
+				"err":     "Cant Find Group",
+				"url":     r.URL.String(),
+			},
+		})
+
 		log.WithFields(fields).Warn("Not found any group")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"message": "not found mock for url" + r.URL.String()})
@@ -91,6 +108,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if next == nil {
+
+		log.WithFields(log.Fields{
+			"key":   "analytics",
+			"event": "get_mock",
+			"payload": logrus.Fields{
+				"success": false,
+				"err":     "Not found mock",
+				"url":     r.URL.String(),
+			},
+		})
+
 		fields["Group URL"] = item.URL
 		fields["Group Method"] = item.Method
 		log.WithFields(fields).Warn("Not found any group")
@@ -104,6 +132,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fields["Status code"] = next.StatusCode
 
 	log.WithFields(fields).Info("Was Sended")
+
+	log.WithFields(log.Fields{
+		"key":   "analytics",
+		"event": "get_mock",
+		"payload": logrus.Fields{
+			"success": true,
+			"url":     r.URL.String(),
+		},
+	})
 
 	w.WriteHeader(next.StatusCode)
 	json.NewEncoder(w).Encode(next.Response)
