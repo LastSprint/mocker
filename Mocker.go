@@ -87,7 +87,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				"err":     "Cant Find Group",
 				"url":     r.URL.String(),
 			},
-		})
+		}).Info("ANALYTICS")
 
 		log.WithFields(fields).Warn("Not found any group")
 		w.WriteHeader(http.StatusBadRequest)
@@ -117,7 +117,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				"err":     "Not found mock",
 				"url":     r.URL.String(),
 			},
-		})
+		}).Info("ANALYTICS")
 
 		fields["Group URL"] = item.URL
 		fields["Group Method"] = item.Method
@@ -140,7 +140,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			"success": true,
 			"url":     r.URL.String(),
 		},
-	})
+	}).Info("ANALYTICS")
 
 	w.WriteHeader(next.StatusCode)
 	json.NewEncoder(w).Encode(next.Response)
