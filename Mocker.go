@@ -20,6 +20,10 @@ var configuration config.Config
 
 const update = "/update_models"
 
+const isNeedProxyHeaderKey = "X-Mocker-Redirect-Is-On"
+const redirectHostHeaderKey = "X-Mocker-Redirect-Host"
+const redirectURLSchemeHeaderKey = "X-Mocker-Redirect-Scheme"
+
 func main() {
 	conf, err := config.LoadConfig(os.Args[1])
 
@@ -53,7 +57,64 @@ func configureLog(config *config.Config) {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+
 	w.Header().Set("Content-Type", "application/json")
+
+	host := r.Header.Get(redirectHostHeaderKey)
+	scheme := r.Header.Get(redirectURLSchemeHeaderKey)
+	isNeedProxy := r.Header.Get(isNeedProxyHeaderKey)
+
+	if isNeedProxy == "true" && scheme != "" && host != "" {
+
+		resp, err := startProxing(r, host, scheme)
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"key":   "analytics",
+				"event": "proxy",
+				"payload": logrus.Fields{
+					"success": false,
+					"err":     err,
+					"host":    host,
+					scheme:    scheme,
+					"url":     r.URL.String(),
+					"resp":    resp,
+				},
+			}).Info("ANALYTICS")
+		} else {
+			data, err := ioutil.ReadAll(resp.Body)
+			if err == nil {
+				w.WriteHeader(http.StatusOK)
+				w.Write(data)
+
+				log.WithFields(log.Fields{
+					"key":   "analytics",
+					"event": "proxy",
+					"payload": logrus.Fields{
+						"success": true,
+						"host":    host,
+						scheme:    scheme,
+						"url":     r.URL.String(),
+						"resp":    resp,
+					},
+				}).Info("ANALYTICS")
+
+				return
+			}
+			log.WithFields(log.Fields{
+				"key":   "analytics",
+				"event": "proxy",
+				"payload": logrus.Fields{
+					"success": false,
+					"err":     err,
+					"host":    host,
+					scheme:    scheme,
+					"url":     r.URL.String(),
+					"resp":    resp,
+				},
+			}).Info("ANALYTICS")
+		}
+	}
 
 	var fields = log.Fields{}
 	fields["Request URL"] = r.URL
@@ -65,7 +126,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		log.WithFields(log.Fields{
 			"key":   "analytics",
 			"event": "update_models",
-		})
+		}).Info("ANALYTICS")
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
