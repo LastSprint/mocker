@@ -8,7 +8,6 @@ import (
 	"mocker/mock"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -42,23 +41,11 @@ func main() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", conf.Port), nil))
 }
 
-func configureLog(config *config.Config) {
-	fmt.Println(config)
-	file, err := os.OpenFile(config.LogsPath, os.O_RDWR|os.O_CREATE, os.ModePerm)
-
-	if err != nil {
-		log.WithFields(log.Fields{
-			"Action": "Not Found Log",
-		}).Panic()
-	}
-
-	log.SetFormatter(&logrus.TextFormatter{})
-	log.SetOutput(file)
-}
-
 func handler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
+
+	// Достаем служебные параметры, чтобы понять, что нужно выполнить проксирование
 
 	host := r.Header.Get(redirectHostHeaderKey)
 	scheme := r.Header.Get(redirectURLSchemeHeaderKey)
@@ -66,53 +53,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if isNeedProxy == "true" && scheme != "" && host != "" {
 
-		resp, err := startProxing(r, host, scheme)
+		data, err := proxyRequest(r, host, scheme)
 
-		if err != nil {
-			log.WithFields(log.Fields{
-				"key":   "analytics",
-				"event": "proxy",
-				"payload": logrus.Fields{
-					"success": false,
-					"err":     err,
-					"host":    host,
-					scheme:    scheme,
-					"url":     r.URL.String(),
-					"resp":    resp,
-				},
-			}).Info("ANALYTICS")
-		} else {
-			data, err := ioutil.ReadAll(resp.Body)
-			if err == nil {
-				w.WriteHeader(http.StatusOK)
-				w.Write(data)
-
-				log.WithFields(log.Fields{
-					"key":   "analytics",
-					"event": "proxy",
-					"payload": logrus.Fields{
-						"success": true,
-						"host":    host,
-						scheme:    scheme,
-						"url":     r.URL.String(),
-						"resp":    resp,
-					},
-				}).Info("ANALYTICS")
-
-				return
-			}
-			log.WithFields(log.Fields{
-				"key":   "analytics",
-				"event": "proxy",
-				"payload": logrus.Fields{
-					"success": false,
-					"err":     err,
-					"host":    host,
-					scheme:    scheme,
-					"url":     r.URL.String(),
-					"resp":    resp,
-				},
-			}).Info("ANALYTICS")
+		if err == nil {
+			// Если метод проксирования не вернул ошибки, то просто записывает ответ в response и заканчиваем обработку
+			w.WriteHeader(http.StatusOK)
+			w.Write(data)
+			return
 		}
 	}
 
@@ -207,60 +154,45 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(next.Response)
 }
 
-func readModels() ([]mock.RequestModelGroup, error) {
+func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 
-	allMocks, err := readAllMocks()
+	// Выполняем проксирование с сохранением файла
 
-	if err != nil {
-		return []mock.RequestModelGroup{}, err
+	resp, err := startProxing(r, host, scheme)
+
+	logFields := logrus.Fields{
+		"host":   host,
+		"scheme": scheme,
+		"url":    r.URL.String(),
+		"resp":   resp,
 	}
 
-	return mock.MakeGroups(allMocks), nil
-}
-
-func readAllMocks() ([]mock.RequestModel, error) {
-	var models []mock.RequestModel
-
-	err := filepath.Walk(configuration.MocksRootDir, func(path string, info os.FileInfo, err error) error {
-
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		dat, err := ioutil.ReadFile(path)
-
-		if err != nil {
-			return err
-		}
-		var model mock.RequestModel
-
-		err = json.Unmarshal(dat, &model)
-
-		if err != nil {
-			log.Println("CANT PARSE", path, err)
-			return nil
-		}
-		models = append(models, model)
-		return nil
-	})
-
 	if err != nil {
-		return []mock.RequestModel{}, err
+
+		// Если проексирование завершилось c ошибкой, то возвращаем ее
+
+		logFields["success"] = false
+		logFields["err"] = err
+		logAnalytics(logFields)
+		return []byte{}, err
 	}
 
-	return models, err
-}
+	data, err := ioutil.ReadAll(resp.Body)
 
-func updateModels() error {
-	newModels, err := readModels()
-	if err != nil {
-		return err
+	if err == nil {
+
+		// Если проксирование завершилось без ошибок и удалось почитать данные из ответа, то возвращаем их клиенту
+
+		logFields["success"] = true
+		logAnalytics(logFields)
+		return data, nil
 	}
-	models = newModels
-	return nil
+
+	// Если произошла ошибка при считывании возвращаем ошибку
+
+	logFields["success"] = false
+	logFields["err"] = err
+
+	logAnalytics(logFields)
+	return []byte{}, err
 }
