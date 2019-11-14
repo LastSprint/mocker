@@ -90,9 +90,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		// Если группа не найдена, то возвращаем ошибку
 
 		logFields := log.Fields{
-			"success":      false,
-			"err":          "GroupNotFound",
-			"requestedUrl": r.URL.String(),
+			"success":            false,
+			"err":                "GroupNotFound",
+			"specificHeaderPath": specificPath,
+			"requestedUrl":       r.URL.String(),
 		}
 
 		logAnalytics(logFields, EventKeyGetMock)
@@ -124,11 +125,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		// Если следующего нет -> группа пуста. Возвращаем ошибку
 
 		logFields := log.Fields{
-			"success":      false,
-			"err":          "ItemInGroupNotFound",
-			"requestedUrl": r.URL.String(),
-			"groupUrl":     item.URL,
-			"groupMethod":  item.Method,
+			"success":            false,
+			"err":                "ItemInGroupNotFound",
+			"requestedUrl":       r.URL.String(),
+			"groupUrl":           item.URL,
+			"specificHeaderPath": specificPath,
+			"groupMethod":        item.Method,
 		}
 
 		logAnalytics(logFields, EventKeyGetMock)
@@ -141,8 +143,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Записываем мок в ответ
 
 	logFields := log.Fields{
-		"success":      true,
-		"requestedUrl": r.URL.String(),
+		"success":            true,
+		"specificHeaderPath": specificPath,
+		"requestedUrl":       r.URL.String(),
 	}
 
 	logAnalytics(logFields, EventKeyGetMock)
