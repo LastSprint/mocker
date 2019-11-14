@@ -40,7 +40,7 @@ func configureLog(config *config.Config) {
 		}).Panic()
 	}
 
-	log.SetFormatter(&logrus.TextFormatter{})
+	log.SetFormatter(&logrus.JSONFormatter{})
 	log.SetOutput(file)
 }
 
