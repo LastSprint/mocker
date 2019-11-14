@@ -152,6 +152,8 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 
 	resp, err := startProxing(r, host, scheme)
 
+	defer resp.Body.Close()
+
 	logFields := logrus.Fields{
 		"host":   host,
 		"scheme": scheme,
@@ -186,6 +188,7 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 	logFields["err"] = err
 
 	logAnalyticsProxy(logFields)
+
 	return []byte{}, err
 }
 

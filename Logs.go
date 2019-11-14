@@ -18,6 +18,8 @@ const (
 	EventKeyGetMock EventKey = "get_mock"
 	// EventKeyUpdateModels ключ события на обновление всех моделей моков (чтение файлов из fs)
 	EventKeyUpdateModels EventKey = "update_models"
+	// EventKeyProxyFileSave ключ для события записи проксированного ответа в моковый файл
+	EventKeyProxyFileSave EventKey = "proxy_file_save"
 )
 
 // LogKey ключ для типа лога

@@ -14,7 +14,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mitchellh/hashstructure"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -24,6 +23,8 @@ func startProxing(r *http.Request, host string, scheme string) (*http.Response, 
 	client := http.Client{}
 
 	newRequest := http.Request{}
+
+	// Копируем запрос
 	newRequest.URL = &url.URL{
 		Scheme:     scheme,
 		Opaque:     r.URL.Opaque,
@@ -35,6 +36,9 @@ func startProxing(r *http.Request, host string, scheme string) (*http.Response, 
 		RawQuery:   r.URL.RawQuery,
 		Fragment:   r.URL.Fragment,
 	}
+
+	// Копируем хедеры и удаляем служебную информацию
+
 	newRequest.Header = r.Header.Clone()
 	newRequest.Header.Del(redirectHostHeaderKey)
 	newRequest.Header.Del(redirectURLSchemeHeaderKey)
@@ -43,22 +47,31 @@ func startProxing(r *http.Request, host string, scheme string) (*http.Response, 
 	newRequest.Body = r.Body
 	newRequest.Method = r.Method
 
+	// Выполняем запрос
+
 	resp, err := client.Do(&newRequest)
 
 	if err != nil {
+		// Если вернулась ошибка - возвращаем ошибку
 		return resp, err
 	}
 
 	if resp.StatusCode != 200 {
+		// Если http-статус != 200 то возвращаем ответ и возможную ошибку
 		return resp, err
 	}
+
+	// Ответ нам подходит - считываем тело
 
 	data, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
+		// Если считать тело не удалось - возвращаем ответ сервера и ошибку
 		return resp, err
 	}
 
+	// После того как мы считали тело, то стрим закончился.
+	// Нам нужно создать новый стрим с указателем в начале (для того, чтобы можно было это тело записать в ответ клиенту далее)
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(data))
 
 	responseJSON := make(map[string]interface{})
@@ -66,17 +79,19 @@ func startProxing(r *http.Request, host string, scheme string) (*http.Response, 
 	err = json.Unmarshal(data, &responseJSON)
 
 	if err != nil {
+		// Если после десериализации тела ответа сервера в JSON произошла ошибка - возвращаем ошибку и ответ
 		return resp, err
 	}
 
+	// Если JSON получен, то асинхронно запускаем запись в файл
 	go saveNewMock(&newRequest, resp, responseJSON)
-
-	defer resp.Body.Close()
 
 	return resp, nil
 }
 
 func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string]interface{}) {
+
+	// Кажется, что тут может быть очень неприятная гонка (:
 
 	mutex.Lock()
 
@@ -84,40 +99,41 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 
 	dirPath := getDirPathFromURL(req.URL)
 
+	// Получив путь создаем его - создаст все вложенные папки.
 	err := os.MkdirAll(dirPath, os.ModePerm)
 
 	if err != nil {
-		log.WithFields(log.Fields{
-			"key":   "analytics",
-			"event": "proxy_file_save",
-			"payload": logrus.Fields{
-				"success": false,
-				"err":     err,
-				"host":    req.URL.Host,
-				"url":     req.URL.String(),
-				"resp":    resp,
-			},
-		}).Info("ANALYTICS")
+		// Если при создании папок произошла ошибка - ничего не делаем
+		fields := log.Fields{
+			"success": false,
+			"err":     err,
+			"host":    req.URL.Host,
+			"url":     req.URL.String(),
+			"resp":    resp,
+		}
+
+		logAnalytics(fields, EventKeyProxyFileSave)
 		return
 	}
 
 	fileName, err := getFileName(req, responseBody)
 
 	if err != nil {
-		log.WithFields(log.Fields{
-			"key":   "analytics",
-			"event": "proxy_file_save",
-			"payload": logrus.Fields{
-				"success": false,
-				"err":     err,
-				"host":    req.URL.Host,
-				"url":     req.URL.String(),
-				"resp":    resp,
-			},
-		}).Info("ANALYTICS")
+		// Если при получении имени файла произошла ошибка - ничего не делаем
+
+		fields := log.Fields{
+			"success": false,
+			"err":     err,
+			"host":    req.URL.Host,
+			"url":     req.URL.String(),
+			"resp":    resp,
+		}
+
+		logAnalytics(fields, EventKeyProxyFileSave)
 		return
 	}
 
+	// Получаем итоговый путь до файла
 	filePath := filepath.Join(dirPath, fileName)
 
 	mock := mock.RequestModel{}
@@ -131,47 +147,45 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 	data, err := json.Marshal(mock)
 
 	if err != nil {
-		log.WithFields(log.Fields{
-			"key":   "analytics",
-			"event": "proxy_file_save",
-			"payload": logrus.Fields{
-				"success": false,
-				"err":     err,
-				"host":    req.URL.Host,
-				"url":     req.URL.String(),
-				"resp":    resp,
-			},
-		}).Info("ANALYTICS")
+		// Если произошла ошибка пр исериализации мока в JSON - ничего не делаем
+
+		fields := log.Fields{
+			"success": false,
+			"err":     err,
+			"host":    req.URL.Host,
+			"url":     req.URL.String(),
+			"resp":    resp,
+		}
+
+		logAnalytics(fields, EventKeyProxyFileSave)
 		return
 	}
+
+	// Записываем файл
 
 	err = ioutil.WriteFile(filePath, data, os.ModePerm)
 
 	if err != nil {
-		log.WithFields(log.Fields{
-			"key":   "analytics",
-			"event": "proxy_file_save",
-			"payload": logrus.Fields{
-				"success": false,
-				"err":     err,
-				"host":    req.URL.Host,
-				"url":     req.URL.String(),
-				"resp":    resp,
-			},
-		}).Info("ANALYTICS")
-	} else {
-		log.WithFields(log.Fields{
-			"key":   "analytics",
-			"event": "proxy_file_save",
-			"payload": logrus.Fields{
-				"success": true,
-				"err":     err,
-				"host":    req.URL.Host,
-				"url":     req.URL.String(),
-				"resp":    resp,
-			},
-		}).Info("ANALYTICS")
+		fields := log.Fields{
+			"success": false,
+			"err":     err,
+			"host":    req.URL.Host,
+			"url":     req.URL.String(),
+			"resp":    resp,
+		}
+
+		logAnalytics(fields, EventKeyProxyFileSave)
+		return
 	}
+
+	fields := log.Fields{
+		"success": true,
+		"host":    req.URL.Host,
+		"url":     req.URL.String(),
+		"resp":    resp,
+	}
+
+	logAnalytics(fields, EventKeyProxyFileSave)
 }
 
 func getFileName(request *http.Request, body interface{}) (string, error) {

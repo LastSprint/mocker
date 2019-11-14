@@ -3,11 +3,11 @@ package mock
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 )
 
+// RequestModel это модель мокового файла
 type RequestModel struct {
 	URL        string      `json:"url"`
 	Response   interface{} `json:"response"`
@@ -16,6 +16,7 @@ type RequestModel struct {
 	Request    interface{} `json:"request"`
 }
 
+// RequestModelGroup это модель для группы моковых файлов
 type RequestModelGroup struct {
 	models        []RequestModel
 	URL           string
@@ -25,7 +26,7 @@ type RequestModelGroup struct {
 
 // Next iterate on next element in array of RequestModelGroup
 func (model *RequestModelGroup) Next() *RequestModel {
-	log.Println("NEXT")
+
 	if model.iteratorIndex == len(model.models) {
 		model.iteratorIndex = 0
 		return &model.models[0]
