@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -22,6 +23,7 @@ const update = "/update_models"
 const isNeedProxyHeaderKey = "X-Mocker-Redirect-Is-On"
 const redirectHostHeaderKey = "X-Mocker-Redirect-Host"
 const redirectURLSchemeHeaderKey = "X-Mocker-Redirect-Scheme"
+const specificPathHeaderKey = "X-Mocker-Specific-Path"
 
 func main() {
 	conf, err := config.LoadConfig(os.Args[1])
@@ -50,6 +52,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	host := r.Header.Get(redirectHostHeaderKey)
 	scheme := r.Header.Get(redirectURLSchemeHeaderKey)
 	isNeedProxy := r.Header.Get(isNeedProxyHeaderKey)
+
+	specificPath := r.Header.Get(specificPathHeaderKey)
 
 	if isNeedProxy == "true" && scheme != "" && host != "" {
 
@@ -103,6 +107,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Читаем тело запроса
 
 	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
 
 	if err == nil {
 		// Если тело запроса считалось, то находим мок в группе, у которого значние request такое же
@@ -111,7 +116,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if next == nil {
 		// Если не нашлось мока по телу - выдаем просто следующий по списку
-		next = item.Next()
+		next = item.Next(specificPath)
 	}
 
 	if next == nil {
@@ -150,16 +155,19 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 
 	// Выполняем проксирование с сохранением файла
 
+	logFields := logrus.Fields{
+		"host":       host,
+		"scheme":     scheme,
+		"url":        r.URL.String(),
+		"proxyStart": time.Now().Format(time.RFC3339),
+	}
+
 	resp, err := startProxing(r, host, scheme)
 
-	defer resp.Body.Close()
+	logFields["resp"] = resp
+	logFields["proxyEnd"] = time.Now().Format(time.RFC3339)
 
-	logFields := logrus.Fields{
-		"host":   host,
-		"scheme": scheme,
-		"url":    r.URL.String(),
-		"resp":   resp,
-	}
+	defer resp.Body.Close()
 
 	if err != nil {
 
@@ -174,7 +182,6 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 	data, err := ioutil.ReadAll(resp.Body)
 
 	if err == nil {
-
 		// Если проксирование завершилось без ошибок и удалось почитать данные из ответа, то возвращаем их клиенту
 
 		logFields["success"] = true
@@ -189,22 +196,33 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 
 	logAnalyticsProxy(logFields)
 
+	time.Now().Format(time.RFC3339)
+
 	return []byte{}, err
 }
 
 func startUpdateModels() error {
+
+	logFields := log.Fields{
+		"success":   false,
+		"startTime": time.Now().Format(time.RFC3339),
+	}
+
 	err := updateModels()
 
+	logFields["endTime"] = time.Now().Format(time.RFC3339)
+
 	if err != nil {
-		logFields := log.Fields{
-			"success": false,
-			"err":     err,
-		}
+
+		logFields["success"] = false
+		logFields["err"] = err
 
 		logAnalytics(logFields, EventKeyUpdateModels)
 		return err
 	}
 
-	logAnalytics(log.Fields{"success": true}, EventKeyUpdateModels)
+	logFields["proxyEnd"] = time.Now().Format(time.RFC3339)
+
+	logAnalytics(logFields, EventKeyUpdateModels)
 	return nil
 }

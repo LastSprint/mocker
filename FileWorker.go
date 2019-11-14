@@ -47,6 +47,14 @@ func readAllMocks() ([]mock.RequestModel, error) {
 		if err != nil {
 			return nil
 		}
+
+		relativePath, err := filepath.Rel(configuration.MocksRootDir, path)
+
+		if err != nil {
+
+		}
+
+		model.FilePath = relativePath
 		models = append(models, model)
 		return nil
 	})
