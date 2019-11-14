@@ -63,41 +63,36 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var fields = log.Fields{}
-	fields["Request URL"] = r.URL
-	fields["Request Method"] = r.Method
+	// Проверяем, является ли полученный запрос запросом на обновление моделей
+	// Если да, то обновляем модели и выходим.
 
 	if strings.Compare(r.URL.String(), update) == 0 {
-		err := updateModels()
 
-		log.WithFields(log.Fields{
-			"key":   "analytics",
-			"event": "update_models",
-		}).Info("ANALYTICS")
+		err := startUpdateModels()
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{"message": "Cant update models"})
-			log.WithFields(fields).Warn("Can't update models!")
+			return
 		}
-		return
 	}
+
+	// Если мы дошли сюда, то нужно найти нужный мок. Сначала ищем нужную группу
 
 	item := mock.FindGroupByURL(&models, r.URL.String(), r.Method)
 
 	if item == nil {
 
-		log.WithFields(log.Fields{
-			"key":   "analytics",
-			"event": "get_mock",
-			"payload": logrus.Fields{
-				"success": false,
-				"err":     "Cant Find Group",
-				"url":     r.URL.String(),
-			},
-		}).Info("ANALYTICS")
+		// Если группа не найдена, то возвращаем ошибку
 
-		log.WithFields(fields).Warn("Not found any group")
+		logFields := log.Fields{
+			"success":      false,
+			"err":          "GroupNotFound",
+			"requestedUrl": r.URL.String(),
+		}
+
+		logAnalytics(logFields, EventKeyGetMock)
+
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"message": "not found mock for url" + r.URL.String()})
 		return
@@ -105,50 +100,47 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	var next *mock.RequestModel
 
+	// Читаем тело запроса
+
 	body, err := ioutil.ReadAll(r.Body)
 
 	if err == nil {
+		// Если тело запроса считалось, то находим мок в группе, у которого значние request такое же
 		next = item.CompareByRequest(body)
 	}
 
 	if next == nil {
+		// Если не нашлось мока по телу - выдаем просто следующий по списку
 		next = item.Next()
 	}
 
 	if next == nil {
 
-		log.WithFields(log.Fields{
-			"key":   "analytics",
-			"event": "get_mock",
-			"payload": logrus.Fields{
-				"success": false,
-				"err":     "Not found mock",
-				"url":     r.URL.String(),
-			},
-		}).Info("ANALYTICS")
+		// Если следующего нет -> группа пуста. Возвращаем ошибку
 
-		fields["Group URL"] = item.URL
-		fields["Group Method"] = item.Method
-		log.WithFields(fields).Warn("Not found any group")
+		logFields := log.Fields{
+			"success":      false,
+			"err":          "ItemInGroupNotFound",
+			"requestedUrl": r.URL.String(),
+			"groupUrl":     item.URL,
+			"groupMethod":  item.Method,
+		}
+
+		logAnalytics(logFields, EventKeyGetMock)
+
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"message": "not found mock for url" + r.URL.String()})
 		return
 	}
 
-	fields["Response URL"] = next.URL
-	fields["Response Method"] = next.Method
-	fields["Status code"] = next.StatusCode
+	// Записываем мок в ответ
 
-	log.WithFields(fields).Info("Was Sended")
+	logFields := log.Fields{
+		"success":      true,
+		"requestedUrl": r.URL.String(),
+	}
 
-	log.WithFields(log.Fields{
-		"key":   "analytics",
-		"event": "get_mock",
-		"payload": logrus.Fields{
-			"success": true,
-			"url":     r.URL.String(),
-		},
-	}).Info("ANALYTICS")
+	logAnalytics(logFields, EventKeyGetMock)
 
 	w.WriteHeader(next.StatusCode)
 	json.NewEncoder(w).Encode(next.Response)
@@ -173,7 +165,7 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 
 		logFields["success"] = false
 		logFields["err"] = err
-		logAnalytics(logFields)
+		logAnalyticsProxy(logFields)
 		return []byte{}, err
 	}
 
@@ -184,7 +176,7 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 		// Если проксирование завершилось без ошибок и удалось почитать данные из ответа, то возвращаем их клиенту
 
 		logFields["success"] = true
-		logAnalytics(logFields)
+		logAnalyticsProxy(logFields)
 		return data, nil
 	}
 
@@ -193,6 +185,23 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 	logFields["success"] = false
 	logFields["err"] = err
 
-	logAnalytics(logFields)
+	logAnalyticsProxy(logFields)
 	return []byte{}, err
+}
+
+func startUpdateModels() error {
+	err := updateModels()
+
+	if err != nil {
+		logFields := log.Fields{
+			"success": false,
+			"err":     err,
+		}
+
+		logAnalytics(logFields, EventKeyUpdateModels)
+		return err
+	}
+
+	logAnalytics(log.Fields{"success": true}, EventKeyUpdateModels)
+	return nil
 }

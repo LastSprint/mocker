@@ -8,15 +8,23 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// EventKey тип для ключей возможных событий
 type EventKey string
 
 const (
+	// EventKeyProxy ключ события проксирования запроса
 	EventKeyProxy EventKey = "proxy"
+	// EventKeyGetMock ключ события получения запроса на чтение мока
+	EventKeyGetMock EventKey = "get_mock"
+	// EventKeyUpdateModels ключ события на обновление всех моделей моков (чтение файлов из fs)
+	EventKeyUpdateModels EventKey = "update_models"
 )
 
+// LogKey ключ для типа лога
 type LogKey string
 
 const (
+	// LogKeyAnalytics ключ для логирования аналитики
 	LogKeyAnalytics LogKey = "analytics"
 )
 
@@ -34,10 +42,18 @@ func configureLog(config *config.Config) {
 	log.SetOutput(file)
 }
 
-func logAnalytics(payload logrus.Fields) {
+func logAnalyticsProxy(payload logrus.Fields) {
+	logAnalytics(payload, EventKeyProxy)
+}
+
+func logAnalytics(payload logrus.Fields, event EventKey) {
 	log.WithFields(log.Fields{
 		"key":     LogKeyAnalytics,
-		"event":   EventKeyProxy,
+		"event":   event,
 		"payload": payload,
 	}).Info("ANALYTICS")
+}
+
+func logEmptyAnalytics(event EventKey) {
+	logAnalytics(logrus.Fields{}, event)
 }
