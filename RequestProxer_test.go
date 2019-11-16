@@ -19,7 +19,7 @@ func TestGetStringPathFromHostAndScheme(t *testing.T) {
 
 	// Assert
 
-	if res == "test.host.ex" {
+	if res != "test.host.ex" {
 		t.Fail()
 	}
 }

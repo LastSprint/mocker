@@ -25,7 +25,11 @@ type RequestModelGroup struct {
 	iteratorIndexes map[string]int
 }
 
-// Next iterate on next element in array of RequestModelGroup
+// Next итерирует на следующий элемент в RequestModelGroup
+// при этом, он передвигает указатель на следующий мок только для той части моков, которая подходит под path
+// Например есть есть два мока `/test/dir` и `/tmp/dir` и в `Next` передали строку `/test`
+// То вернется мок `/test/dir` и указатель передвинется на следующий мок с `filePath ~ "/test"`.
+// При этом, если затем вызывать у группы `Next` с параметром `/tmp` то вернется мок с `/tmp/dir` и тогда его указатель сдвинется.
 func (model *RequestModelGroup) Next(path string) *RequestModel {
 
 	iteratorIndex := model.iteratorIndexes[path]
@@ -61,6 +65,7 @@ func (model *RequestModelGroup) findFirstMatchedIndex(path string, currentIndex 
 	return model.findFirstMatchedIndex(path, 0)
 }
 
+// FindGroupByURL в группе моков `groups` находит группу, которой соответствуют `url` и `method`
 func FindGroupByURL(groups *[]RequestModelGroup, url string, method string) *RequestModelGroup {
 
 	for index := 0; index < len(*groups); index++ {
@@ -75,22 +80,12 @@ func FindGroupByURL(groups *[]RequestModelGroup, url string, method string) *Req
 	return nil
 }
 
-func FindGroupByURLStruct(groups []RequestModelGroup, url string, method string) *RequestModelGroup {
-
-	for index := 0; index < len(groups); index++ {
-
-		if CompareURLPath(url, groups[index].URL) && strings.Compare(method, groups[index].Method) == 0 {
-			return &groups[index]
-		}
-	}
-	return nil
-}
-
+// MakeGroups группирует моки, используя метод `FindGroupByURLStruct`
 func MakeGroups(allMocks []RequestModel) []RequestModelGroup {
 	var result []RequestModelGroup
 
 	for _, item := range allMocks {
-		group := FindGroupByURLStruct(result, item.URL, item.Method)
+		group := FindGroupByURL(&result, item.URL, item.Method)
 
 		if group == nil {
 			newGroup := RequestModelGroup{}
@@ -122,9 +117,14 @@ func (model *RequestModel) CompareByRequest(requestData []byte) bool {
 
 	modeRequestData, err := json.Marshal(model.Request)
 
+	if err != nil {
+		return false
+	}
+
 	var bytes interface{}
 
-	json.Unmarshal(requestData, &bytes)
+	err = json.Unmarshal(requestData, &bytes)
+
 	if err != nil {
 		return false
 	}
@@ -132,11 +132,12 @@ func (model *RequestModel) CompareByRequest(requestData []byte) bool {
 	return reflect.DeepEqual(modeRequestData, requestData)
 }
 
-func (group *RequestModelGroup) CompareByRequest(requestData []byte) *RequestModel {
-	for index := 0; index < len(group.models); index++ {
-
-		if group.models[index].CompareByRequest(requestData) {
-			return &group.models[index]
+// CompareByRequest вызывает `CompareByRequest` для каждого мока из группы и если находит нужный - возвращает его.
+// В противном случае вернется nil.
+func (model *RequestModelGroup) CompareByRequest(requestData []byte) *RequestModel {
+	for index := 0; index < len(model.models); index++ {
+		if model.models[index].CompareByRequest(requestData) {
+			return &model.models[index]
 		}
 	}
 	return nil
