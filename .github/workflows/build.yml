@@ -5,6 +5,8 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    env: 
+      CODECOV_TOKEN: 49d4c0f8-c379-4656-88c0-00a6af80e533
     steps:
 
     - name: Set up Go 1.13
@@ -19,8 +21,9 @@ jobs:
     - name: Build
       run: go build -v
       
-    - name: Test
-      run: go test -race -coverprofile=coverage.txt -covermode=atomic
-    - name: Upload test result to CodeCov
-      run: bash <(curl -s https://codecov.io/bash) -t 49d4c0f8-c379-4656-88c0-00a6af80e533
+    - name: Test main
+      run: go test -race -coverprofile=coverage.txt -covermode=atomic && bash <(curl -s https://codecov.io/bash)
+      
+    - name: Test mock
+      run: go test ./mock -race -coverprofile=coverage.txt -covermode=atomic && bash <(curl -s https://codecov.io/bash)
       
