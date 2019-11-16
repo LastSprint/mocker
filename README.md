@@ -1,5 +1,6 @@
 ![Actions](https://github.com/LastSprint/mocker/workflows/Build/badge.svg)
 [![codecov](https://codecov.io/gh/LastSprint/mocker/branch/master/graph/badge.svg)](https://codecov.io/gh/LastSprint/mocker)
+[![codebeat badge](https://codebeat.co/badges/2c22d06b-0f69-44af-9b42-00c6cf0cc3e4)](https://codebeat.co/projects/github-com-lastsprint-mocker-master)
 # Mocker
 
 Это приложение, которое позволяет имитировать работу реального backend'а.
