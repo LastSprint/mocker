@@ -20,4 +20,7 @@ jobs:
       run: go build -v
       
     - name: Test
-      run: go test
+      run: go test -race -coverprofile=coverage.txt -covermode=atomic
+    - name: Upload test result to CodeCov
+      run: bash <(curl -s https://codecov.io/bash) -t 49d4c0f8-c379-4656-88c0-00a6af80e533
+      
