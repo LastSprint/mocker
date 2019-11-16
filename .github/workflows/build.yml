@@ -21,9 +21,6 @@ jobs:
     - name: Build
       run: go build -v
       
-    - name: Test main
-      run: go test -race -coverprofile=coverage.txt -covermode=atomic && bash <(curl -s https://codecov.io/bash)
-      
     - name: Test mock
       run: go test ./mock -race -coverprofile=coverage.txt -covermode=atomic && bash <(curl -s https://codecov.io/bash)
       
