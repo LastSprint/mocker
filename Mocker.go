@@ -70,6 +70,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Проверяем, является ли полученный запрос запросом на обновление моделей
 	// Если да, то обновляем модели и выходим.
 
+	fmt.Println(r.URL.String())
+
 	if strings.Compare(r.URL.String(), update) == 0 {
 
 		err := startUpdateModels()
@@ -79,6 +81,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(map[string]string{"message": "Cant update models"})
 			return
 		}
+
+		w.WriteHeader(200)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Success"})
+		return
 	}
 
 	// Если мы дошли сюда, то нужно найти нужный мок. Сначала ищем нужную группу
