@@ -213,7 +213,7 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 func startUpdateModels() error {
 
 	logFields := log.Fields{
-		"success":   false,
+		"success":   true,
 		"startTime": time.Now().Format(time.RFC3339),
 	}
 
@@ -229,8 +229,6 @@ func startUpdateModels() error {
 		logAnalytics(logFields, EventKeyUpdateModels)
 		return err
 	}
-
-	logFields["proxyEnd"] = time.Now().Format(time.RFC3339)
 
 	logAnalytics(logFields, EventKeyUpdateModels)
 	return nil
