@@ -8,6 +8,16 @@ import (
 
 // RequestModel это модель мокового файла
 type RequestModel struct {
+
+	// IsDisabled состояние мока. Если `true`, то мок исключается из выдачи.
+	// Если IsDisabled == nil, то флаг считается опущенным и мок учавствует в выдаче.
+	IsDisabled *bool `json:"isDisabled"`
+	// IsOnly указывает на то, что мок, для которого этот флаг `true` становится единственным в выдаче.
+	// При этом, если isOnly = true, то `isDisabled` не учитывается.
+	// В случае если isOnly == nil, то считается, что флаг опущен.
+	// При этом итератор не меняет своей позиции.
+	IsOnly *bool `json:"isOnly"`
+
 	URL        string      `json:"url"`
 	Response   interface{} `json:"response"`
 	Method     string      `json:"method"`
@@ -31,6 +41,10 @@ type RequestModelGroup struct {
 // То вернется мок `/test/dir` и указатель передвинется на следующий мок с `filePath ~ "/test"`.
 // При этом, если затем вызывать у группы `Next` с параметром `/tmp` то вернется мок с `/tmp/dir` и тогда его указатель сдвинется.
 func (model *RequestModelGroup) Next(path string) *RequestModel {
+
+	if mock := model.findIsOnlyMock(); mock != nil {
+		return mock
+	}
 
 	iteratorIndex := model.iteratorIndexes[path]
 
@@ -163,4 +177,15 @@ func isGroupInSpecificPath(specificPath, groupURL string) bool {
 	}
 
 	return true
+}
+
+// findIsOnlyMock находит мок, у которого флаг `IsOnly == true`
+// В слуачае, если такого мока нет, то вернется nil.
+func (model *RequestModelGroup) findIsOnlyMock() *RequestModel {
+	for _, mock := range model.models {
+		if mock.IsOnly != nil && *mock.IsOnly == true {
+			return &mock
+		}
+	}
+	return nil
 }
