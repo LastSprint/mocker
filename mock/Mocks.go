@@ -67,7 +67,7 @@ func (model *RequestModelGroup) findFirstMatchedIndex(path string, currentIndex 
 
 	for index := currentIndex; index < len(model.models); index++ {
 
-		if isGroupInSpecificPath(path, model.models[index].FilePath) {
+		if isGroupInSpecificPath(path, model.models[index].FilePath) && !model.models[index].isDisabled() {
 			return index
 		}
 	}
@@ -188,4 +188,16 @@ func (model *RequestModelGroup) findIsOnlyMock() *RequestModel {
 		}
 	}
 	return nil
+}
+
+func (model RequestModel) isDisabled() bool {
+	if model.IsDisabled == nil {
+		return false
+	}
+
+	if *model.IsDisabled == false {
+		return false
+	}
+
+	return true
 }

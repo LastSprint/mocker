@@ -155,3 +155,78 @@ func TestNextReturnsIsOnlyMockNotMutateIterator(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestNextDontReturnsDisabledMock(t *testing.T) {
+	// Arrange
+
+	path := "/test"
+	method := "GET"
+
+	enabledMock := RequestModel{
+		FilePath: path,
+	}
+
+	group := RequestModelGroup{
+		URL:             path,
+		Method:          method,
+		iteratorIndexes: map[string]int{},
+		models: []RequestModel{
+			enabledMock,
+			RequestModel{
+				FilePath:   path,
+				IsDisabled: newTrue(),
+			},
+		},
+	}
+
+	// Act
+
+	result := make([]*RequestModel, 4)
+
+	for index := 0; index < 4; index++ {
+		result[index] = group.Next(path)
+	}
+
+	// Assert
+
+	for _, item := range result {
+		if *item != enabledMock {
+			t.Fail()
+		}
+	}
+}
+
+func TestNextDontLoopingWithOnlyDisabledMocks(t *testing.T) {
+	// Arrange
+
+	path := "/test"
+	method := "GET"
+
+	group := RequestModelGroup{
+		URL:             path,
+		Method:          method,
+		iteratorIndexes: map[string]int{},
+		models: []RequestModel{
+			RequestModel{
+				FilePath:   path,
+				IsDisabled: newTrue(),
+			},
+		},
+	}
+
+	// Act
+
+	result := make([]*RequestModel, 4)
+
+	for index := 0; index < 4; index++ {
+		result[index] = group.Next(path)
+	}
+
+	// Assert
+
+	for _, item := range result {
+		if item != nil {
+			t.Fail()
+		}
+	}
+}
