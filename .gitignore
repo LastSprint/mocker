@@ -16,3 +16,4 @@ pkg/*
 bin/*
 .DS_Store
 test_dir/*
+src/github.com/*
