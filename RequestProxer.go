@@ -20,9 +20,9 @@ import (
 var mutex sync.Mutex
 
 func startProxing(r *http.Request, host string, scheme string) (*http.Response, error) {
-	client := http.Client{}
-
 	newRequest := http.Request{}
+
+	client := http.Client{}
 
 	// Копируем запрос
 	newRequest.URL = &url.URL{
@@ -50,6 +50,7 @@ func startProxing(r *http.Request, host string, scheme string) (*http.Response, 
 	// Выполняем запрос
 
 	resp, err := client.Do(&newRequest)
+
 
 	if err != nil {
 		// Если вернулась ошибка - возвращаем ошибку
@@ -109,7 +110,6 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 			"err":     err,
 			"host":    req.URL.Host,
 			"url":     req.URL.String(),
-			"resp":    resp,
 		}
 
 		logAnalytics(fields, EventKeyProxyFileSave)
@@ -126,7 +126,6 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 			"err":     err,
 			"host":    req.URL.Host,
 			"url":     req.URL.String(),
-			"resp":    resp,
 		}
 
 		logAnalytics(fields, EventKeyProxyFileSave)
@@ -154,7 +153,6 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 			"err":     err,
 			"host":    req.URL.Host,
 			"url":     req.URL.String(),
-			"resp":    resp,
 		}
 
 		logAnalytics(fields, EventKeyProxyFileSave)
@@ -171,7 +169,6 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 			"err":     err,
 			"host":    req.URL.Host,
 			"url":     req.URL.String(),
-			"resp":    resp,
 		}
 
 		logAnalytics(fields, EventKeyProxyFileSave)
@@ -182,7 +179,6 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 		"success": true,
 		"host":    req.URL.Host,
 		"url":     req.URL.String(),
-		"resp":    resp,
 	}
 
 	logAnalytics(fields, EventKeyProxyFileSave)

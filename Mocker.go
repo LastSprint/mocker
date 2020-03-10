@@ -173,7 +173,6 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 
 	resp, err := startProxing(r, host, scheme)
 
-	logFields["resp"] = resp
 	logFields["proxyEnd"] = time.Now().Format(time.RFC3339)
 
 	defer resp.Body.Close()
@@ -204,8 +203,6 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 	logFields["err"] = err
 
 	logAnalyticsProxy(logFields)
-
-	time.Now().Format(time.RFC3339)
 
 	return []byte{}, err
 }
