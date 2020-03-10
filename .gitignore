@@ -18,3 +18,4 @@ bin/*
 test_dir/*
 src/github.com/*
 mocker
+sandbox
