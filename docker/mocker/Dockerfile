@@ -4,7 +4,7 @@ RUN git clone https://github.com/LastSprint/mocker.git /app
 
 WORKDIR /app/
 
-RUN git checkout v3.0.0
+RUN git checkout v4.1.1
 
 RUN go build
 
