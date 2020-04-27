@@ -151,3 +151,62 @@ func TestCompareByRequestFailedForNotJsonRequest(t *testing.T) {
 		t.Fail()
 	}
 }
+
+// ЗАметили такой баг на одном из реальных кейсов
+func TestCompareByRequestFailedWithPhoneAndLongToken(t *testing.T) {
+	// Arrange
+
+	requestValue := map[string]interface{}{
+		"phone": "71111111112",
+		"fcmToken": "31f31cf5-2ec0-459c-8c17-6c4b64c69161-1f840a43-e36b-4163-b69b-ce3db09d5ca2",
+	}
+
+	group := RequestModelGroup{
+		models: []RequestModel{
+			RequestModel{
+				Request: requestValue,
+			},
+		},
+	}
+
+	// Act
+
+	httpRequestString := `{"phone":"71111111112","fcmToken":"31f31cf5-2ec0-459c-8c17-6c4b64c69161-1f840a43-e36b-4163-b69b-ce3db09d5ca2"}`
+
+	model := group.CompareByRequest([]byte(httpRequestString))
+
+	// Assert
+
+	if model == nil {
+		t.Fail()
+	}
+}
+
+func TestCompareByRequestFailedWithPhoneAndLongTokenWithDifferentOrder(t *testing.T) {
+	// Arrange
+
+	requestValue := map[string]interface{}{
+		"phone": "71111111112",
+		"fcmToken": "31f31cf5-2ec0-459c-8c17-6c4b64c69161-1f840a43-e36b-4163-b69b-ce3db09d5ca2",
+	}
+
+	group := RequestModelGroup{
+		models: []RequestModel{
+			RequestModel{
+				Request: requestValue,
+			},
+		},
+	}
+
+	// Act
+
+	httpRequestString := `{"fcmToken":"31f31cf5-2ec0-459c-8c17-6c4b64c69161-1f840a43-e36b-4163-b69b-ce3db09d5ca2","phone":"71111111112"}`
+
+	model := group.CompareByRequest([]byte(httpRequestString))
+
+	// Assert
+
+	if model == nil {
+		t.Fail()
+	}
+}

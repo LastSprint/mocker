@@ -143,7 +143,13 @@ func (model *RequestModel) CompareByRequest(requestData []byte) bool {
 		return false
 	}
 
-	return reflect.DeepEqual(modeRequestData, requestData)
+	resultReuqestBytes, err := json.Marshal(bytes)
+
+	if err != nil {
+		return false
+	}
+
+	return reflect.DeepEqual(modeRequestData, resultReuqestBytes)
 }
 
 // CompareByRequest вызывает `CompareByRequest` для каждого мока из группы и если находит нужный - возвращает его.
