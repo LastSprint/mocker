@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"mocker/Features"
 	"mocker/config"
 	"mocker/mock"
 	"net/http"
@@ -155,6 +156,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logAnalytics(logFields, EventKeyGetMock)
+
+	if next.Delay != 0 {
+		delayer := Features.Throttler{}
+		delayer.Throttle(next.Delay)
+	}
 
 	w.WriteHeader(next.StatusCode)
 	json.NewEncoder(w).Encode(next.Response)

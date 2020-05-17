@@ -25,6 +25,8 @@ type RequestModel struct {
 	Request    interface{} `json:"request"`
 
 	FilePath string `json:"-"`
+
+	Delay int `json:"responseDelay"`
 }
 
 // RequestModelGroup это модель для группы моковых файлов
