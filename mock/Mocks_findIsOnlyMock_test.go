@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -40,6 +41,7 @@ func TestFindIsOnlyMockReturnsFirstIsOnly(t *testing.T) {
 	// Arrange
 
 	firstIsOnly := RequestModel{
+		URL: "sdf",
 		IsOnly: newTrue(),
 	}
 
@@ -64,11 +66,11 @@ func TestFindIsOnlyMockReturnsFirstIsOnly(t *testing.T) {
 
 	// Assert
 
-	if *result == secondIsOnly {
+	if reflect.DeepEqual(*result, secondIsOnly) {
 		t.Fail()
 	}
 
-	if *result != firstIsOnly {
+	if !reflect.DeepEqual(*result, firstIsOnly) {
 		t.Fail()
 	}
 }

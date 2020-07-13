@@ -1,6 +1,9 @@
 package mock
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestNextWorkSuccess(t *testing.T) {
 	// Arrange
@@ -190,7 +193,7 @@ func TestNextDontReturnsDisabledMock(t *testing.T) {
 	// Assert
 
 	for _, item := range result {
-		if *item != enabledMock {
+		if !reflect.DeepEqual(*item, enabledMock) {
 			t.Fail()
 		}
 	}

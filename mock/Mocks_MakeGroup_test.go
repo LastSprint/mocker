@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -27,7 +28,7 @@ func TestMakeGroupWorkSuccessForSameMocks(t *testing.T) {
 	}
 
 	for _, item := range groups[0].models {
-		if item != model {
+		if !reflect.DeepEqual(item, model)  {
 			t.Fail()
 		}
 	}
@@ -60,7 +61,7 @@ func TestMakeGroupWorkSuccessForEqualsMocksWithDifferentResponse(t *testing.T) {
 	}
 
 	for _, item := range groups[0].models {
-		if item != model1 && item != model2 {
+		if !reflect.DeepEqual(item, model1) && !reflect.DeepEqual(item, model2)  {
 			t.Fail()
 		}
 	}
@@ -93,7 +94,7 @@ func TestMakeGroupWorkSuccessForEqualsMocksWithDifferentRquest(t *testing.T) {
 	}
 
 	for _, item := range groups[0].models {
-		if item != model1 && item != model2 {
+		if !reflect.DeepEqual(item, model1) && !reflect.DeepEqual(item, model2) {
 			t.Fail()
 		}
 	}
@@ -124,11 +125,12 @@ func TestMakeGroupWorkSuccessForDifferentUrl(t *testing.T) {
 		t.Fail()
 	}
 
-	if groups[0].models[0] != model1 {
+
+	if !reflect.DeepEqual(groups[0].models[0], model1) {
 		t.Fail()
 	}
 
-	if groups[1].models[0] != model2 {
+	if !reflect.DeepEqual(groups[1].models[0], model2) {
 		t.Fail()
 	}
 }
@@ -158,11 +160,11 @@ func TestMakeGroupWorkSuccessForDifferentMethods(t *testing.T) {
 		t.Fail()
 	}
 
-	if groups[0].models[0] != model1 {
+	if !reflect.DeepEqual(groups[0].models[0], model1) {
 		t.Fail()
 	}
 
-	if groups[1].models[0] != model2 {
+	if !reflect.DeepEqual(groups[1].models[0], model2) {
 		t.Fail()
 	}
 }
@@ -242,13 +244,13 @@ func TestMakeGroupWorkSuccessForManySameMocks(t *testing.T) {
 	}
 
 	for _, item := range groups[0].models {
-		if item != model {
+		if !reflect.DeepEqual(item, model) {
 			t.Fail()
 		}
 	}
 
 	for _, item := range groups[1].models {
-		if item != model2 {
+		if !reflect.DeepEqual(item, model2){
 			t.Fail()
 		}
 	}
