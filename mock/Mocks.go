@@ -27,6 +27,8 @@ type RequestModel struct {
 	FilePath string `json:"-"`
 
 	Delay int `json:"responseDelay"`
+
+	ResponseHeaders map[string]string `json:"responseHeaders"`
 }
 
 // RequestModelGroup это модель для группы моковых файлов

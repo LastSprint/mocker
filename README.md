@@ -29,6 +29,7 @@
     "responseDelay": int,
     "response": object,
     "request": object
+    "responseHeaders": object
  }
 ```
 
@@ -61,6 +62,18 @@
 Это поле содержит данные для поиска конкретного мока. 
 
 Подробнее можно прочесть [здесь](/docks/features.md/#cравнение-по-параметрам)
+
+### ResponseHeaders
+
+Содержит список пар ключ-значение где ключ - имя хедера, а value - значение. 
+
+Например, если мы хотим чтоб мокер вернул заголово `X-Example-Header` со значением `example_value` то пишем: 
+
+```Json
+"responseHeaders": {
+  "X-Example-Header": "example_value"
+}
+```
 
 ### IsDisabled
 

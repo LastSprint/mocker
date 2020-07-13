@@ -162,6 +162,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		delayer.Throttle(next.Delay)
 	}
 
+
+	for key, value := range next.ResponseHeaders {
+		w.Header().Set(key, value)
+	}
+
 	w.WriteHeader(next.StatusCode)
 	json.NewEncoder(w).Encode(next.Response)
 }
