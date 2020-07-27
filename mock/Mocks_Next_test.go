@@ -233,3 +233,40 @@ func TestNextDontLoopingWithOnlyDisabledMocks(t *testing.T) {
 		}
 	}
 }
+
+func TestNextDontReturnExcludedMocks(t *testing.T) {
+	// Arrange
+
+	path := "/test"
+	method := "GET"
+
+	valTrue := true
+
+	group := RequestModelGroup{
+		URL:             path,
+		Method:          method,
+		iteratorIndexes: map[string]int{},
+		models: []RequestModel{
+			RequestModel{
+				FilePath:   path,
+				IsExcludedFromIteration: &valTrue,
+			},
+		},
+	}
+
+	// Act
+
+	result := make([]*RequestModel, 4)
+
+	for index := 0; index < 4; index++ {
+		result[index] = group.Next(path)
+	}
+
+	// Assert
+
+	for _, item := range result {
+		if item != nil {
+			t.Fail()
+		}
+	}
+}

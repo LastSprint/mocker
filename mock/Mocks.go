@@ -29,6 +29,8 @@ type RequestModel struct {
 	Delay int `json:"responseDelay"`
 
 	ResponseHeaders map[string]string `json:"responseHeaders"`
+
+	IsExcludedFromIteration *bool `json:"isExcludedFromIteration"`
 }
 
 // RequestModelGroup это модель для группы моковых файлов
@@ -71,7 +73,7 @@ func (model *RequestModelGroup) findFirstMatchedIndex(path string, currentIndex 
 
 	for index := currentIndex; index < len(model.models); index++ {
 
-		if isGroupInSpecificPath(path, model.models[index].FilePath) && !model.models[index].isDisabled() {
+		if isGroupInSpecificPath(path, model.models[index].FilePath) && !model.models[index].isDisabled() && !model.models[index].isExcludedFromIteration() {
 			return index
 		}
 	}
@@ -210,4 +212,16 @@ func (model RequestModel) isDisabled() bool {
 	}
 
 	return true
+}
+
+func (model RequestModel) isExcludedFromIteration() bool {
+	if model.IsExcludedFromIteration == nil {
+		return false
+	}
+
+	if *model.IsExcludedFromIteration == true {
+		return true
+	}
+
+	return false
 }
