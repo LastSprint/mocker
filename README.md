@@ -22,7 +22,8 @@
 ```
  {
     "isDisabled": bool,
-    "IsOnly": bool,
+    "isOnly": bool,
+    "isExcludedFromIteration": bool,
     "url": string,
     "method": string,
     "statusCode": int,
