@@ -184,7 +184,10 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 
 	// Записываем файл
 
-	err = ioutil.WriteFile(filePath, data, os.ModePerm)
+	var prettyJSON bytes.Buffer
+	_ = json.Indent(&prettyJSON, data, "", "\t")
+
+	err = ioutil.WriteFile(filePath, prettyJSON.Bytes(), os.ModePerm)
 
 	if err != nil {
 		fields := log.Fields{
