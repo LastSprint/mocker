@@ -2,15 +2,18 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"io/ioutil"
 	"mocker/mock"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/mitchellh/hashstructure"
@@ -22,7 +25,27 @@ var mutex sync.Mutex
 func startProxing(r *http.Request, host string, scheme string) (*http.Response, error) {
 	newRequest := http.Request{}
 
-	client := http.Client{}
+	client := http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+				DualStack: true,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			TLSClientConfig: &tls.Config{
+				// See comment above.
+				// UNSAFE!
+				// DON'T USE IN PRODUCTION!
+				InsecureSkipVerify: true,
+			},
+		},
+	}
 
 	// Копируем запрос
 	newRequest.URL = &url.URL{
