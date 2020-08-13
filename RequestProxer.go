@@ -22,7 +22,7 @@ import (
 
 var mutex sync.Mutex
 
-func startProxing(r *http.Request, host string, scheme string) (*http.Response, error) {
+func startProxing(r *http.Request, host string, scheme string, projectID string) (*http.Response, error) {
 	newRequest := http.Request{}
 
 	client := http.Client{
@@ -108,12 +108,12 @@ func startProxing(r *http.Request, host string, scheme string) (*http.Response, 
 	}
 
 	// Если JSON получен, то асинхронно запускаем запись в файл
-	go saveNewMock(&newRequest, resp, responseJSON)
+	go saveNewMock(&newRequest, resp, responseJSON, projectID)
 
 	return resp, nil
 }
 
-func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string]interface{}) {
+func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string]interface{}, projectID string) {
 
 	// Кажется, что тут может быть очень неприятная гонка (:
 
@@ -157,10 +157,11 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 
 	// Получаем итоговый путь до файла
 	filePath := filepath.Join(dirPath, fileName)
+	filePath = filepath.Join(projectID, filePath)
 
 	mock := mock.RequestModel{}
 
-	mockUrl := req.URL.Path
+	mockUrl := "/" + projectID + req.URL.Path
 
 	if len(req.URL.RawQuery) != 0 {
 		mockUrl += "?" + req.URL.RawQuery

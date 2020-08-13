@@ -22,6 +22,7 @@ var configuration config.Config
 const update = "/update_models"
 
 const isNeedProxyHeaderKey = "X-Mocker-Redirect-Is-On"
+const projectIdHeader = "X-Mocker-Project-Id"
 const redirectHostHeaderKey = "X-Mocker-Redirect-Host"
 const redirectURLSchemeHeaderKey = "X-Mocker-Redirect-Scheme"
 const specificPathHeaderKey = "X-Mocker-Specific-Path"
@@ -55,10 +56,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	isNeedProxy := r.Header.Get(isNeedProxyHeaderKey)
 
 	specificPath := r.Header.Get(specificPathHeaderKey)
+	projectID := r.Header.Get(projectIdHeader)
 
 	if isNeedProxy == "true" && scheme != "" && host != "" {
 
-		data, err := proxyRequest(r, host, scheme)
+		data, err := proxyRequest(r, host, scheme, projectID)
 
 		if err == nil {
 			// Если метод проксирования не вернул ошибки, то просто записывает ответ в response и заканчиваем обработку
@@ -171,7 +173,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(next.Response)
 }
 
-func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
+func proxyRequest(r *http.Request, host string, scheme string, projectID string) ([]byte, error) {
 
 	// Выполняем проксирование с сохранением файла
 
@@ -182,7 +184,7 @@ func proxyRequest(r *http.Request, host string, scheme string) ([]byte, error) {
 		"proxyStart": time.Now().Format(time.RFC3339),
 	}
 
-	resp, err := startProxing(r, host, scheme)
+	resp, err := startProxing(r, host, scheme, projectID)
 
 	logFields["proxyEnd"] = time.Now().Format(time.RFC3339)
 
