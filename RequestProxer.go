@@ -160,7 +160,13 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 
 	mock := mock.RequestModel{}
 
-	mock.URL = req.URL.String()
+	mockUrl := req.URL.Path
+
+	if len(req.URL.RawQuery) != 0 {
+		mockUrl += "?" + req.URL.RawQuery
+	}
+
+	mock.URL = mockUrl
 	mock.Method = req.Method
 	mock.StatusCode = 200
 
