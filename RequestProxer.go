@@ -121,7 +121,7 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 
 	defer mutex.Unlock()
 
-	dirPath := getDirPathFromURL(req.URL)
+	dirPath := getDirPathFromURL(req.URL, projectID)
 
 	// Получив путь создаем его - создаст все вложенные папки.
 	err := os.MkdirAll(dirPath, os.ModePerm)
@@ -157,11 +157,10 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string
 
 	// Получаем итоговый путь до файла
 	filePath := filepath.Join(dirPath, fileName)
-	filePath = filepath.Join(projectID, filePath)
 
 	mock := mock.RequestModel{}
 
-	mockUrl := "/" + projectID + req.URL.Path
+	mockUrl := req.URL.Path
 
 	if len(req.URL.RawQuery) != 0 {
 		mockUrl += "?" + req.URL.RawQuery
@@ -228,8 +227,8 @@ func getFileName(request *http.Request, body interface{}) (string, error) {
 	return request.Method + "_" + strconv.FormatUint(hash, 16) + ".json", nil
 }
 
-func getDirPathFromURL(model *url.URL) string {
-	return filepath.Join(configuration.MocksRootDir, model.Host, model.Path)
+func getDirPathFromURL(model *url.URL, project string) string {
+	return filepath.Join(configuration.MocksRootDir, project, model.Host, model.Path)
 }
 
 func getUniqName() string {
