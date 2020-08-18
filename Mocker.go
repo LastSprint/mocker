@@ -64,6 +64,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusGone)
 			dt, _ := json.Marshal(err)
+			logAnalyticsProxy(log.Fields{"err": err, "resp": resp})
 			w.Write(dt)
 			return
 		}
