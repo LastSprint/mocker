@@ -60,11 +60,22 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if isNeedProxy == "true" && scheme != "" && host != "" {
 
-		data, err := proxyRequest(r, host, scheme, projectID)
+		resp, err := proxyRequest(r, host, scheme, projectID)
+		if err != nil {
+			w.WriteHeader(http.StatusGone)
+			w.Write([]byte("Ошибка при проксировании"))
+			return
+		}
+		data, err := ioutil.ReadAll(resp.Body)
 
 		if err == nil {
 			// Если метод проксирования не вернул ошибки, то просто записывает ответ в response и заканчиваем обработку
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(resp.StatusCode)
+			for key, val := range resp.Header {
+				for _, it := range val {
+					w.Header().Add(key, it)
+				}
+			}
 			w.Write(data)
 			return
 		}
@@ -173,7 +184,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(next.Response)
 }
 
-func proxyRequest(r *http.Request, host string, scheme string, projectID string) ([]byte, error) {
+func proxyRequest(r *http.Request, host string, scheme string, projectID string) (*http.Response, error) {
 
 	// Выполняем проксирование с сохранением файла
 
@@ -188,8 +199,6 @@ func proxyRequest(r *http.Request, host string, scheme string, projectID string)
 
 	logFields["proxyEnd"] = time.Now().Format(time.RFC3339)
 
-	defer resp.Body.Close()
-
 	if err != nil {
 
 		// Если проексирование завершилось c ошибкой, то возвращаем ее
@@ -197,17 +206,15 @@ func proxyRequest(r *http.Request, host string, scheme string, projectID string)
 		logFields["success"] = false
 		logFields["err"] = err
 		logAnalyticsProxy(logFields)
-		return []byte{}, err
+		return nil, err
 	}
-
-	data, err := ioutil.ReadAll(resp.Body)
 
 	if err == nil {
 		// Если проксирование завершилось без ошибок и удалось почитать данные из ответа, то возвращаем их клиенту
 
 		logFields["success"] = true
 		logAnalyticsProxy(logFields)
-		return data, nil
+		return resp, nil
 	}
 
 	// Если произошла ошибка при считывании возвращаем ошибку
@@ -217,7 +224,7 @@ func proxyRequest(r *http.Request, host string, scheme string, projectID string)
 
 	logAnalyticsProxy(logFields)
 
-	return []byte{}, err
+	return nil, err
 }
 
 func startUpdateModels() error {
