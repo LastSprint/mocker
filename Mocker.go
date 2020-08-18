@@ -63,7 +63,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		resp, err := proxyRequest(r, host, scheme, projectID)
 		if err != nil {
 			w.WriteHeader(http.StatusGone)
-			w.Write([]byte("Ошибка при проксировании"))
+			dt, _ := json.Marshal(err)
+			w.Write(dt)
 			return
 		}
 		data, err := ioutil.ReadAll(resp.Body)
