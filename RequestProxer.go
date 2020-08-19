@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"mocker/mock"
 	"net"
@@ -72,8 +73,16 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 
 	// Выполняем запрос
 
+	newRequest.Header.Del("Accept-Encoding")
+
+	rd, _ := ioutil.ReadAll(newRequest.Body)
+
+	newRequest.Body = ioutil.NopCloser(bytes.NewBuffer(rd))
+
 	resp, err := client.Do(&newRequest)
 
+	fmt.Println(string(rd))
+	fmt.Println(r.Header)
 
 	if err != nil {
 		// Если вернулась ошибка - возвращаем ошибку
@@ -85,15 +94,32 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 		return resp, err
 	}
 
-	// Ответ нам подходит - считываем тело
+	var data []byte
 
-	data, err := ioutil.ReadAll(resp.Body)
+	//// Ответ нам подходит - считываем тело
+	//if resp.Header["Content-Encoding"][0] == "gzip" {
+	//	gzr, err := gzip.NewReader(resp.Body)
+	//
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//
+	//	data, err = ioutil.ReadAll(gzr)
+	//
+	//	//resp.Header.Del("Content-Encoding")
+	//	//resp.Header.Del("Vary")
+	//
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//} else {
+		data, err = ioutil.ReadAll(resp.Body)
+	//}
 
 	if err != nil {
 		// Если считать тело не удалось - возвращаем ответ сервера и ошибку
 		return resp, err
 	}
-
 	// После того как мы считали тело, то стрим закончился.
 	// Нам нужно создать новый стрим с указателем в начале (для того, чтобы можно было это тело записать в ответ клиенту далее)
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(data))
@@ -101,6 +127,8 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 	responseJSON := make(map[string]interface{})
 
 	err = json.Unmarshal(data, &responseJSON)
+
+	fmt.Println(string(data))
 
 	if err != nil {
 		// Если после десериализации тела ответа сервера в JSON произошла ошибка - возвращаем ошибку и ответ
