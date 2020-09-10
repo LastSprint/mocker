@@ -73,7 +73,7 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 
 	// Выполняем запрос
 
-	newRequest.Header.Del("Accept-Encoding")
+	//newRequest.Header.Del("Accept-Encoding")
 
 	rd, _ := ioutil.ReadAll(newRequest.Body)
 
@@ -120,11 +120,13 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 		// Если считать тело не удалось - возвращаем ответ сервера и ошибку
 		return resp, err
 	}
+
+	fmt.Println(string(data))
 	// После того как мы считали тело, то стрим закончился.
 	// Нам нужно создать новый стрим с указателем в начале (для того, чтобы можно было это тело записать в ответ клиенту далее)
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(data))
 
-	responseJSON := make(map[string]interface{})
+	var responseJSON interface{}
 
 	err = json.Unmarshal(data, &responseJSON)
 
@@ -141,7 +143,7 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 	return resp, nil
 }
 
-func saveNewMock(req *http.Request, resp *http.Response, responseBody map[string]interface{}, projectID string) {
+func saveNewMock(req *http.Request, resp *http.Response, responseBody interface{}, projectID string) {
 
 	// Кажется, что тут может быть очень неприятная гонка (:
 

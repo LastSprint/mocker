@@ -72,14 +72,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		if err == nil {
 			// Если метод проксирования не вернул ошибки, то просто записывает ответ в response и заканчиваем обработку
-			w.WriteHeader(resp.StatusCode)
+
 			for key, val := range resp.Header {
 				for _, it := range val {
 					w.Header().Add(key, it)
 				}
 			}
+			w.WriteHeader(resp.StatusCode)
 			w.Write(data)
-			fmt.Println(string(data))
+			//fmt.Println(w.Header())
+			//fmt.Println(string(data))
 			//gzip.NewWriter(w).Write(data)
 			return
 		}
