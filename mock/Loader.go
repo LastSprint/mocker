@@ -81,10 +81,16 @@ func compareURLQueryPart(lhs string, rhs string) bool {
 			return false
 		}
 
+		if len(mockParam) < 2 { return false }
+
 		// means that param names equal
 		if strings.Contains(mockParam[1], "{") {
 			continue
-		} else if strings.Compare(lhsParam[1], mockParam[1]) == 0 {
+		}
+
+		if len(lhsParam) < 2 { return false }
+
+		if strings.Compare(lhsParam[1], mockParam[1]) == 0 {
 			continue
 		}
 		return false

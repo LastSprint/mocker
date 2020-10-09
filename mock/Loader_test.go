@@ -75,6 +75,30 @@ func TestPathPatternMatchingWorkSuccess(t *testing.T) {
 	)
 }
 
+func TestPathPatternMatchingDoesntCrash(t *testing.T) {
+	// Arrange
+
+	lhs := "/request/url/detail?{id}"
+	rhs := "/request/url/detail?{id}"
+
+	// Act
+
+	comparasionResult := CompareURLPath(lhs, rhs)
+
+	// Assert
+
+	if !comparasionResult {
+		return
+	}
+
+	t.Error(
+		"Arrange: ", []string{lhs, rhs},
+		"Act: ", "CompareURLPath",
+		"Assert: ", comparasionResult,
+		"Awaiting: ", !comparasionResult,
+	)
+}
+
 func TestPathWithDifferentNumberFailure(t *testing.T) {
 	// Arrange
 
