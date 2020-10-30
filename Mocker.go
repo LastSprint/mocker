@@ -72,7 +72,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		if err == nil {
 			// Если метод проксирования не вернул ошибки, то просто записывает ответ в response и заканчиваем обработку
-
 			for key, val := range resp.Header {
 				for _, it := range val {
 					w.Header().Add(key, it)
@@ -80,9 +79,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			}
 			w.WriteHeader(resp.StatusCode)
 			w.Write(data)
-			//fmt.Println(w.Header())
-			//fmt.Println(string(data))
-			//gzip.NewWriter(w).Write(data)
 			return
 		}
 	}
@@ -131,17 +127,41 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	var next *mock.RequestModel
 
-	// Читаем тело запроса
+	// получаем хедеры
 
-	body, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
+	flatHeaders := map[string]string{}
 
-	if err == nil {
-		// Если тело запроса считалось, то находим мок в группе, у которого значние request такое же
-		next = item.CompareByRequest(body)
+	for key, value := range r.Header {
+		flatValue := ""
+
+		for _, headerItem := range value {
+			flatValue += headerItem
+		}
+
+		flatHeaders[key] = flatValue
 	}
 
+	// Читаем тело запроса
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	next = item.CompareByBodyAndHeaders(body, flatHeaders)
+
 	if next == nil {
+
+		logFields := log.Fields{
+			"err":                "SearchingWasFail",
+			"requestedUrl":       r.URL.String(),
+			"groupUrl":           item.URL,
+			"specificHeaderPath": specificPath,
+			"groupMethod":        item.Method,
+			"headers":            flatHeaders,
+			"request":            string(body),
+		}
+
+		logAnalytics(logFields, EventKeyGetMock)
+
 		// Если не нашлось мока по телу - выдаем просто следующий по списку
 		next = item.Next(specificPath)
 	}
@@ -180,7 +200,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		delayer := Features.Throttler{}
 		delayer.Throttle(next.Delay)
 	}
-
 
 	for key, value := range next.ResponseHeaders {
 		w.Header().Set(key, value)

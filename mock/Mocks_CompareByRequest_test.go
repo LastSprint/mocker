@@ -157,7 +157,7 @@ func TestCompareByRequestFailedWithPhoneAndLongToken(t *testing.T) {
 	// Arrange
 
 	requestValue := map[string]interface{}{
-		"phone": "71111111112",
+		"phone":    "71111111112",
 		"fcmToken": "31f31cf5-2ec0-459c-8c17-6c4b64c69161-1f840a43-e36b-4163-b69b-ce3db09d5ca2",
 	}
 
@@ -186,7 +186,7 @@ func TestCompareByRequestFailedWithPhoneAndLongTokenWithDifferentOrder(t *testin
 	// Arrange
 
 	requestValue := map[string]interface{}{
-		"phone": "71111111112",
+		"phone":    "71111111112",
 		"fcmToken": "31f31cf5-2ec0-459c-8c17-6c4b64c69161-1f840a43-e36b-4163-b69b-ce3db09d5ca2",
 	}
 

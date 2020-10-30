@@ -15,7 +15,7 @@ func TestGetStringPathFromHostAndScheme(t *testing.T) {
 
 	// Act
 
-	res := getDirPathFromURL(&url)
+	res := getDirPathFromURL(&url, "")
 
 	// Assert
 
@@ -35,7 +35,7 @@ func TestGetStringPathFromUrlWithPath(t *testing.T) {
 
 	// Act
 
-	res := getDirPathFromURL(&url)
+	res := getDirPathFromURL(&url, "")
 
 	// Assert
 
@@ -56,7 +56,7 @@ func TestGetStringPathFromUrlWithParams(t *testing.T) {
 
 	// Act
 
-	res := getDirPathFromURL(&url)
+	res := getDirPathFromURL(&url, "")
 
 	// Assert
 

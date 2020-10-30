@@ -113,7 +113,7 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 	//		return nil, err
 	//	}
 	//} else {
-		data, err = ioutil.ReadAll(resp.Body)
+	data, err = ioutil.ReadAll(resp.Body)
 	//}
 
 	if err != nil {

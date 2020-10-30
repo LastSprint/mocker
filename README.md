@@ -31,6 +31,10 @@
     "response": object,
     "request": object
     "responseHeaders": object
+    "requestHeaders": {
+        "key": "value",
+         .....
+     }
  }
 ```
 
@@ -63,6 +67,12 @@
 Это поле содержит данные для поиска конкретного мока. 
 
 Подробнее можно прочесть [здесь](/docks/features.md/#cравнение-по-параметрам)
+
+### RequestHeaders
+
+Это поле содержит данные для поиска конкретного мока
+
+Подробнее [тут](/docks/features.md/#сравнение-по-заголовкам)
 
 ### ResponseHeaders
 

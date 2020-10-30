@@ -28,7 +28,7 @@ func TestMakeGroupWorkSuccessForSameMocks(t *testing.T) {
 	}
 
 	for _, item := range groups[0].models {
-		if !reflect.DeepEqual(item, model)  {
+		if !reflect.DeepEqual(item, model) {
 			t.Fail()
 		}
 	}
@@ -61,7 +61,7 @@ func TestMakeGroupWorkSuccessForEqualsMocksWithDifferentResponse(t *testing.T) {
 	}
 
 	for _, item := range groups[0].models {
-		if !reflect.DeepEqual(item, model1) && !reflect.DeepEqual(item, model2)  {
+		if !reflect.DeepEqual(item, model1) && !reflect.DeepEqual(item, model2) {
 			t.Fail()
 		}
 	}
@@ -124,7 +124,6 @@ func TestMakeGroupWorkSuccessForDifferentUrl(t *testing.T) {
 	if len(groups) != 2 {
 		t.Fail()
 	}
-
 
 	if !reflect.DeepEqual(groups[0].models[0], model1) {
 		t.Fail()
@@ -250,7 +249,7 @@ func TestMakeGroupWorkSuccessForManySameMocks(t *testing.T) {
 	}
 
 	for _, item := range groups[1].models {
-		if !reflect.DeepEqual(item, model2){
+		if !reflect.DeepEqual(item, model2) {
 			t.Fail()
 		}
 	}

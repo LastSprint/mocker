@@ -248,7 +248,7 @@ func TestNextDontReturnExcludedMocks(t *testing.T) {
 		iteratorIndexes: map[string]int{},
 		models: []RequestModel{
 			RequestModel{
-				FilePath:   path,
+				FilePath:                path,
 				IsExcludedFromIteration: &valTrue,
 			},
 		},

@@ -41,7 +41,7 @@ func TestFindIsOnlyMockReturnsFirstIsOnly(t *testing.T) {
 	// Arrange
 
 	firstIsOnly := RequestModel{
-		URL: "sdf",
+		URL:    "sdf",
 		IsOnly: newTrue(),
 	}
 

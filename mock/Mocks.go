@@ -29,6 +29,7 @@ type RequestModel struct {
 	Delay int `json:"responseDelay"`
 
 	ResponseHeaders map[string]string `json:"responseHeaders"`
+	RequestHeaders  map[string]string `json:"requestHeaders"`
 
 	IsExcludedFromIteration *bool `json:"isExcludedFromIteration"`
 }
@@ -158,6 +159,34 @@ func (model *RequestModel) CompareByRequest(requestData []byte) bool {
 	return reflect.DeepEqual(modeRequestData, resultReuqestBytes)
 }
 
+// CompareByBodyAndHeaders находит нужный мок по телу запроса и хедерам запроса
+//
+// Приоритеты:
+// 1. Ищет мок у которого одновременно совпадает и тело запроса и хедеры
+// 2. Если не выполнилось 1, то ищет мок у которого совпадает тело
+// 3. Если не выполнилось 2, то ищет мок у которого совпадают хедеры
+func (model *RequestModelGroup) CompareByBodyAndHeaders(body []byte, headers map[string]string) *RequestModel {
+
+	// сначала находим тот у которого и тело и хедеры подходят
+	for _, item := range model.models {
+		if item.CompareByRequest(body) && item.CompareByHeaders(headers) {
+			return &item
+		}
+	}
+
+	// если мы попали сюда, значит такой не нашелся
+
+	// если не нашелся то возвращаем сначала тот который сматчился по телу
+
+	if val := model.CompareByRequest(body); val != nil {
+		return val
+	}
+
+	// если не нашелся возвращаем тот который сматчился по заголовкам
+
+	return model.CompareByHeaders(headers)
+}
+
 // CompareByRequest вызывает `CompareByRequest` для каждого мока из группы и если находит нужный - возвращает его.
 // В противном случае вернется nil.
 func (model *RequestModelGroup) CompareByRequest(requestData []byte) *RequestModel {
@@ -167,6 +196,49 @@ func (model *RequestModelGroup) CompareByRequest(requestData []byte) *RequestMod
 		}
 	}
 	return nil
+}
+
+// CompareByHeaders используется для того, чтобы сравнить "входящие" header-ы `headers`
+// С "ожидаемыми" (прописаными в моке) заголовках `RequestModel.RequestHeaders`
+// Метод самостоятельно нормилизует ключи приводя их к нижнему регистру
+// Проверка происходит в "мягком" виде. То есть сравнивается только то что пришедшие хедеры содержаться в моке и значения равны
+func (model *RequestModelGroup) CompareByHeaders(headers map[string]string) *RequestModel {
+	for _, item := range model.models {
+		if item.CompareByHeaders(headers) {
+			return &item
+		}
+	}
+	return nil
+}
+
+func (model *RequestModel) CompareByHeaders(headers map[string]string) bool {
+	// если параметр RequestHeaders был не указан, то мы даже не будем сравнивать
+	if len(model.RequestHeaders) == 0 {
+		return false
+	}
+
+	normalizedHeaders := map[string]string{}
+
+	for key, value := range headers {
+		normalizedHeaders[strings.ToLower(key)] = value
+	}
+
+	for key, value := range model.RequestHeaders {
+		val, ok := normalizedHeaders[strings.ToLower(key)]
+
+		// если такой ключ есть в моке
+		// и значение по этому ключу равно значению в запросе
+		// значит все ок и пропускаем
+		if ok && val == value {
+			continue
+		}
+		return false
+	}
+
+	// если нашли мок у которого все ключи совпали, значит это наш парень
+	// возврщаем его и заканчиваем поиск
+	// в противном случае берем следующий мок и по-новой
+	return true
 }
 
 func isGroupInSpecificPath(specificPath, groupURL string) bool {
