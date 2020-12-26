@@ -23,7 +23,7 @@ func TestCompareByBodyAndHeadersReturnsNilForEmptyInput(t *testing.T) {
 
 	// Act
 
-	result := group.CompareByBodyAndHeaders(inputBody, inputHeader)
+	result := group.LookUpByBodyAndHeaders(inputBody, inputHeader)
 
 	// Assert
 
@@ -57,7 +57,7 @@ func TestCompareByBodyAndHeadersReturnsEntireMatchedItemFirstly(t *testing.T) {
 
 	// Act
 
-	result := group.CompareByBodyAndHeaders(inputBody, inputHeader)
+	result := group.LookUpByBodyAndHeaders(inputBody, inputHeader)
 
 	// Assert
 
@@ -96,7 +96,7 @@ func TestCompareByBodyAndHeadersReturnsBodyMatchedItemSecondly(t *testing.T) {
 
 	// Act
 
-	result := group.CompareByBodyAndHeaders(inputBody, inputHeader)
+	result := group.LookUpByBodyAndHeaders(inputBody, inputHeader)
 
 	// Assert
 
@@ -135,7 +135,7 @@ func TestCompareByBodyAndHeadersReturnsHadersMatchedItemThirdly(t *testing.T) {
 
 	// Act
 
-	result := group.CompareByBodyAndHeaders(inputBody, inputHeader)
+	result := group.LookUpByBodyAndHeaders(inputBody, inputHeader)
 
 	// Assert
 

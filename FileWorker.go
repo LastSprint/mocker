@@ -71,6 +71,6 @@ func updateModels() error {
 	if err != nil {
 		return err
 	}
-	models = newModels
+	state = newModels
 	return nil
 }

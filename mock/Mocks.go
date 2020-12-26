@@ -159,13 +159,13 @@ func (model *RequestModel) CompareByRequest(requestData []byte) bool {
 	return reflect.DeepEqual(modeRequestData, resultReuqestBytes)
 }
 
-// CompareByBodyAndHeaders находит нужный мок по телу запроса и хедерам запроса
+// LookUpByBodyAndHeaders находит нужный мок по телу запроса и хедерам запроса
 //
 // Приоритеты:
 // 1. Ищет мок у которого одновременно совпадает и тело запроса и хедеры
 // 2. Если не выполнилось 1, то ищет мок у которого совпадает тело
 // 3. Если не выполнилось 2, то ищет мок у которого совпадают хедеры
-func (model *RequestModelGroup) CompareByBodyAndHeaders(body []byte, headers map[string]string) *RequestModel {
+func (model *RequestModelGroup) LookUpByBodyAndHeaders(body []byte, headers map[string]string) *RequestModel {
 
 	// сначала находим тот у которого и тело и хедеры подходят
 	for _, item := range model.models {

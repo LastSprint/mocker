@@ -32,7 +32,6 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 			DialContext: (&net.Dialer{
 				Timeout:   30 * time.Second,
 				KeepAlive: 30 * time.Second,
-				DualStack: true,
 			}).DialContext,
 			ForceAttemptHTTP2:     true,
 			MaxIdleConns:          100,
@@ -40,15 +39,12 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 			TLSHandshakeTimeout:   10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
 			TLSClientConfig: &tls.Config{
-				// See comment above.
-				// UNSAFE!
-				// DON'T USE IN PRODUCTION!
 				InsecureSkipVerify: true,
 			},
 		},
 	}
 
-	// Копируем запрос
+	// just copy request
 	newRequest.URL = &url.URL{
 		Scheme:     scheme,
 		Opaque:     r.URL.Opaque,
@@ -61,7 +57,7 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 		Fragment:   r.URL.Fragment,
 	}
 
-	// Копируем хедеры и удаляем служебную информацию
+	// copy headers and return system information
 
 	newRequest.Header = r.Header.Clone()
 	newRequest.Header.Del(redirectHostHeaderKey)
@@ -71,9 +67,7 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 	newRequest.Body = r.Body
 	newRequest.Method = r.Method
 
-	// Выполняем запрос
-
-	//newRequest.Header.Del("Accept-Encoding")
+	// do request
 
 	rd, _ := ioutil.ReadAll(newRequest.Body)
 
@@ -96,68 +90,43 @@ func startProxing(r *http.Request, host string, scheme string, projectID string)
 
 	var data []byte
 
-	//// Ответ нам подходит - считываем тело
-	//if resp.Header["Content-Encoding"][0] == "gzip" {
-	//	gzr, err := gzip.NewReader(resp.Body)
-	//
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//
-	//	data, err = ioutil.ReadAll(gzr)
-	//
-	//	//resp.Header.Del("Content-Encoding")
-	//	//resp.Header.Del("Vary")
-	//
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//} else {
 	data, err = ioutil.ReadAll(resp.Body)
-	//}
 
 	if err != nil {
 		// Если считать тело не удалось - возвращаем ответ сервера и ошибку
 		return resp, err
 	}
 
-	fmt.Println(string(data))
-	// После того как мы считали тело, то стрим закончился.
-	// Нам нужно создать новый стрим с указателем в начале (для того, чтобы можно было это тело записать в ответ клиенту далее)
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(data))
 
 	var responseJSON interface{}
 
 	err = json.Unmarshal(data, &responseJSON)
 
-	fmt.Println(string(data))
-
 	if err != nil {
 		// Если после десериализации тела ответа сервера в JSON произошла ошибка - возвращаем ошибку и ответ
 		return resp, err
 	}
 
-	// Если JSON получен, то асинхронно запускаем запись в файл
-	go saveNewMock(&newRequest, resp, responseJSON, projectID)
+	// if we get the response the we will write it to new JSON file
+	go saveNewMock(&newRequest, responseJSON, projectID)
 
 	return resp, nil
 }
 
-func saveNewMock(req *http.Request, resp *http.Response, responseBody interface{}, projectID string) {
-
-	// Кажется, что тут может быть очень неприятная гонка (:
+func saveNewMock(req *http.Request, responseBody interface{}, projectID string) {
 
 	mutex.Lock()
 
 	defer mutex.Unlock()
 
+	// create path from URL and project
 	dirPath := getDirPathFromURL(req.URL, projectID)
 
-	// Получив путь создаем его - создаст все вложенные папки.
+	// create folders from dirPath
 	err := os.MkdirAll(dirPath, os.ModePerm)
 
 	if err != nil {
-		// Если при создании папок произошла ошибка - ничего не делаем
 		fields := log.Fields{
 			"success": false,
 			"err":     err,
@@ -172,8 +141,6 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody interface{
 	fileName, err := getFileName(req, responseBody)
 
 	if err != nil {
-		// Если при получении имени файла произошла ошибка - ничего не делаем
-
 		fields := log.Fields{
 			"success": false,
 			"err":     err,
@@ -185,10 +152,9 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody interface{
 		return
 	}
 
-	// Получаем итоговый путь до файла
 	filePath := filepath.Join(dirPath, fileName)
 
-	mock := mock.RequestModel{}
+	mockModel := mock.RequestModel{}
 
 	mockUrl := req.URL.Path
 
@@ -196,17 +162,15 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody interface{
 		mockUrl += "?" + req.URL.RawQuery
 	}
 
-	mock.URL = mockUrl
-	mock.Method = req.Method
-	mock.StatusCode = 200
+	mockModel.URL = mockUrl
+	mockModel.Method = req.Method
+	mockModel.StatusCode = 200
 
-	mock.Response = responseBody
+	mockModel.Response = responseBody
 
-	data, err := json.Marshal(mock)
+	data, err := json.Marshal(mockModel)
 
 	if err != nil {
-		// Если произошла ошибка пр исериализации мока в JSON - ничего не делаем
-
 		fields := log.Fields{
 			"success": false,
 			"err":     err,
@@ -217,8 +181,6 @@ func saveNewMock(req *http.Request, resp *http.Response, responseBody interface{
 		logAnalytics(fields, EventKeyProxyFileSave)
 		return
 	}
-
-	// Записываем файл
 
 	var prettyJSON bytes.Buffer
 	_ = json.Indent(&prettyJSON, data, "", "\t")

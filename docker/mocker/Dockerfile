@@ -8,4 +8,4 @@ RUN git checkout v4.1.1
 
 RUN go build
 
-COPY config.json config.json
+CMD "./mocker"

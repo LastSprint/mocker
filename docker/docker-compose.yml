@@ -1,18 +1,39 @@
-version: "3.7"
+version: '3'
 services:
   mocker:
-    build: ./mocker
-    restart: always
-    command: "./mocker config.json"
+    build:
+      context: .
+      dockerfile: mocker/Dockerfile
+    restart: unless-stopped
+    command: "./mocker mockerconfig.json"
     volumes:
       - ./logs:/var/log
       - ./mocks:/mocks
-    ports: 
-      - 8081:1111
-  editor:
     ports:
-      - 8082:8000
+      - 8844:1111
+    networks:
+      - mocker_network
+
+  editor:
+    restart: unless-stopped
+    ports:
+      - 8822:80
     volumes:
-      - ./mocks:/root
-    command: "--root /root"
-    image: coderaiser/cloudcmd
+      - ./mocks:/srv
+      - .filebrowser.db:/database.db
+      - .filebrowser_config.json:/.filebrowser.json
+    image: filebrowser/filebrowser
+
+  fswather:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./sandbox/mocs:/mocks
+    networks:
+      - mocker_network
+
+networks:
+  mocker_network:
+    driver: bridge

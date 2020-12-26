@@ -8,14 +8,14 @@ import (
 func TestGetStringPathFromHostAndScheme(t *testing.T) {
 	// Arrange
 
-	url := url.URL{
+	urlModel := url.URL{
 		Scheme: "http",
 		Host:   "test.host.ex",
 	}
 
 	// Act
 
-	res := getDirPathFromURL(&url, "")
+	res := getDirPathFromURL(&urlModel, "")
 
 	// Assert
 
@@ -27,7 +27,7 @@ func TestGetStringPathFromHostAndScheme(t *testing.T) {
 func TestGetStringPathFromUrlWithPath(t *testing.T) {
 	// Arrange
 
-	url := url.URL{
+	urlModel := url.URL{
 		Scheme: "http",
 		Host:   "test.host.ex",
 		Path:   "path/to/endpoint",
@@ -35,7 +35,7 @@ func TestGetStringPathFromUrlWithPath(t *testing.T) {
 
 	// Act
 
-	res := getDirPathFromURL(&url, "")
+	res := getDirPathFromURL(&urlModel, "")
 
 	// Assert
 
@@ -47,7 +47,7 @@ func TestGetStringPathFromUrlWithPath(t *testing.T) {
 func TestGetStringPathFromUrlWithParams(t *testing.T) {
 	// Arrange
 
-	url := url.URL{
+	urlModel := url.URL{
 		Scheme:   "http",
 		Host:     "test.host.ex",
 		Path:     "path/to/endpoint",
@@ -56,7 +56,7 @@ func TestGetStringPathFromUrlWithParams(t *testing.T) {
 
 	// Act
 
-	res := getDirPathFromURL(&url, "")
+	res := getDirPathFromURL(&urlModel, "")
 
 	// Assert
 
