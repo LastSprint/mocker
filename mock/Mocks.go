@@ -6,16 +6,18 @@ import (
 	"strings"
 )
 
-// RequestModel это модель мокового файла
+// RequestModel this is a mock model
 type RequestModel struct {
 
-	// IsDisabled состояние мока. Если `true`, то мок исключается из выдачи.
-	// Если IsDisabled == nil, то флаг считается опущенным и мок учавствует в выдаче.
+	// IsDisabled the mock state. if is set to `true`, the mock will be skipped in server response.
+	// nil value is the same as `false`
 	IsDisabled *bool `json:"isDisabled"`
-	// IsOnly указывает на то, что мок, для которого этот флаг `true` становится единственным в выдаче.
-	// При этом, если isOnly = true, то `isDisabled` не учитывается.
-	// В случае если isOnly == nil, то считается, что флаг опущен.
-	// При этом итератор не меняет своей позиции.
+
+	// IsOnly if set to `true` the mock will be the only one in responses.
+	// Other mocks from group won't be processing
+	//
+	// If `isOnly` = true then `isDisabled` won't considered
+	// nil value is the same as `false`
 	IsOnly *bool `json:"isOnly"`
 
 	URL        string      `json:"url"`
@@ -34,7 +36,7 @@ type RequestModel struct {
 	IsExcludedFromIteration *bool `json:"isExcludedFromIteration"`
 }
 
-// RequestModelGroup это модель для группы моковых файлов
+// RequestModelGroup this is a model for group of mocks
 type RequestModelGroup struct {
 	models          []RequestModel
 	URL             string
@@ -42,11 +44,11 @@ type RequestModelGroup struct {
 	iteratorIndexes map[string]int
 }
 
-// Next итерирует на следующий элемент в RequestModelGroup
-// при этом, он передвигает указатель на следующий мок только для той части моков, которая подходит под path
-// Например есть есть два мока `/test/dir` и `/tmp/dir` и в `Next` передали строку `/test`
-// То вернется мок `/test/dir` и указатель передвинется на следующий мок с `filePath ~ "/test"`.
-// При этом, если затем вызывать у группы `Next` с параметром `/tmp` то вернется мок с `/tmp/dir` и тогда его указатель сдвинется.
+// Next iterates at the next element следующий элемент in RequestModelGroup
+// and the pointer will be moved only for the part of mocks which is confirmed to `path`
+// For example
+// There are two mocks: `/test/dir` and `/tmp/dir`
+// If `path` is `/test` then will be returned `test/dir` and pointer will be moved to next mock with path `/test/*`
 func (model *RequestModelGroup) Next(path string) *RequestModel {
 
 	if mock := model.findIsOnlyMock(); mock != nil {
@@ -86,7 +88,7 @@ func (model *RequestModelGroup) findFirstMatchedIndex(path string, currentIndex 
 	return model.findFirstMatchedIndex(path, 0)
 }
 
-// FindGroupByURL в группе моков `groups` находит группу, которой соответствуют `url` и `method`
+// FindGroupByURL tries to find specific group by url and method
 func FindGroupByURL(groups *[]RequestModelGroup, url string, method string) *RequestModelGroup {
 
 	for index := 0; index < len(*groups); index++ {
@@ -101,7 +103,7 @@ func FindGroupByURL(groups *[]RequestModelGroup, url string, method string) *Req
 	return nil
 }
 
-// MakeGroups группирует моки, используя метод `FindGroupByURLStruct`
+// MakeGroups create groups from plain array of mocks
 func MakeGroups(allMocks []RequestModel) []RequestModelGroup {
 	var result []RequestModelGroup
 
@@ -123,13 +125,13 @@ func MakeGroups(allMocks []RequestModel) []RequestModelGroup {
 	return result
 }
 
-// CompareByRequest работает следующим образом:
-// - Если `RequestModel.Request` == nil -> false
-// - Если при маршалинге `RequestModel.Request` произошла ошибка -> false
-// - Если байтовое представление данных не одинаково -> false
+// CompareByRequest rules:
+// - If `RequestModel.Request` == nil will return false
+// - If while marshaling `RequestModel.Request` an error is thrown will return false
+// - If bodies are not equal (byte-to-byte) will return false
 // ------
 // - Parameters:
-//	- requestData: "сырое" бинарное представление тела запроса.
+//	- requestData: binary request body (raw)
 func (model *RequestModel) CompareByRequest(requestData []byte) bool {
 
 	if model.Request == nil {
@@ -159,36 +161,34 @@ func (model *RequestModel) CompareByRequest(requestData []byte) bool {
 	return reflect.DeepEqual(modeRequestData, resultReuqestBytes)
 }
 
-// LookUpByBodyAndHeaders находит нужный мок по телу запроса и хедерам запроса
+// LookUpByBodyAndHeaders looks up for specific mock by body and headers
 //
-// Приоритеты:
-// 1. Ищет мок у которого одновременно совпадает и тело запроса и хедеры
-// 2. Если не выполнилось 1, то ищет мок у которого совпадает тело
-// 3. Если не выполнилось 2, то ищет мок у которого совпадают хедеры
+// Priorities:
+// 1. Looks up for mock which has equal Request (to body) and Headers
+// 2. If 1 is wrong then will look up for mock with same body only
+// 3. If 2 is wrong then will look up for mock with same headers
 func (model *RequestModelGroup) LookUpByBodyAndHeaders(body []byte, headers map[string]string) *RequestModel {
 
-	// сначала находим тот у которого и тело и хедеры подходят
+	// 1
 	for _, item := range model.models {
 		if item.CompareByRequest(body) && item.CompareByHeaders(headers) {
 			return &item
 		}
 	}
 
-	// если мы попали сюда, значит такой не нашелся
+	// there is no mock with same headers and body at the same time
 
-	// если не нашелся то возвращаем сначала тот который сматчился по телу
-
+	// 2
 	if val := model.CompareByRequest(body); val != nil {
 		return val
 	}
 
-	// если не нашелся возвращаем тот который сматчился по заголовкам
-
+	// 3
 	return model.CompareByHeaders(headers)
 }
 
-// CompareByRequest вызывает `CompareByRequest` для каждого мока из группы и если находит нужный - возвращает его.
-// В противном случае вернется nil.
+// CompareByRequest calls `CompareByRequest` for each mock from the group
+// if finds correct mock then will return it. Or will return nil
 func (model *RequestModelGroup) CompareByRequest(requestData []byte) *RequestModel {
 	for index := 0; index < len(model.models); index++ {
 		if model.models[index].CompareByRequest(requestData) {
@@ -198,10 +198,6 @@ func (model *RequestModelGroup) CompareByRequest(requestData []byte) *RequestMod
 	return nil
 }
 
-// CompareByHeaders используется для того, чтобы сравнить "входящие" header-ы `headers`
-// С "ожидаемыми" (прописаными в моке) заголовках `RequestModel.RequestHeaders`
-// Метод самостоятельно нормилизует ключи приводя их к нижнему регистру
-// Проверка происходит в "мягком" виде. То есть сравнивается только то что пришедшие хедеры содержаться в моке и значения равны
 func (model *RequestModelGroup) CompareByHeaders(headers map[string]string) *RequestModel {
 	for _, item := range model.models {
 		if item.CompareByHeaders(headers) {
@@ -212,7 +208,7 @@ func (model *RequestModelGroup) CompareByHeaders(headers map[string]string) *Req
 }
 
 func (model *RequestModel) CompareByHeaders(headers map[string]string) bool {
-	// если параметр RequestHeaders был не указан, то мы даже не будем сравнивать
+
 	if len(model.RequestHeaders) == 0 {
 		return false
 	}
@@ -226,18 +222,12 @@ func (model *RequestModel) CompareByHeaders(headers map[string]string) bool {
 	for key, value := range model.RequestHeaders {
 		val, ok := normalizedHeaders[strings.ToLower(key)]
 
-		// если такой ключ есть в моке
-		// и значение по этому ключу равно значению в запросе
-		// значит все ок и пропускаем
 		if ok && val == value {
 			continue
 		}
 		return false
 	}
 
-	// если нашли мок у которого все ключи совпали, значит это наш парень
-	// возврщаем его и заканчиваем поиск
-	// в противном случае берем следующий мок и по-новой
 	return true
 }
 
@@ -263,8 +253,6 @@ func isGroupInSpecificPath(specificPath, groupURL string) bool {
 	return true
 }
 
-// findIsOnlyMock находит мок, у которого флаг `IsOnly == true`
-// В слуачае, если такого мока нет, то вернется nil.
 func (model *RequestModelGroup) findIsOnlyMock() *RequestModel {
 	for _, mock := range model.models {
 		if mock.IsOnly != nil && *mock.IsOnly == true {

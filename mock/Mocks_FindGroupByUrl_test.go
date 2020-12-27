@@ -11,7 +11,7 @@ func TestFindGroupByURLWorksSuccess(t *testing.T) {
 	method := "GET"
 
 	groups := []RequestModelGroup{
-		RequestModelGroup{
+		{
 			URL:    url,
 			Method: method,
 		},
@@ -35,7 +35,7 @@ func TestFindGroupByURLWorksSuccessWithDifferentMethod(t *testing.T) {
 	method := "GET"
 
 	groups := []RequestModelGroup{
-		RequestModelGroup{
+		{
 			URL:    url,
 			Method: "POST",
 		},
@@ -59,7 +59,7 @@ func TestFindGroupByURLWorksSuccessWithDifferentURL(t *testing.T) {
 	method := "GET"
 
 	groups := []RequestModelGroup{
-		RequestModelGroup{
+		{
 			URL:    "/test/path",
 			Method: method,
 		},
@@ -83,7 +83,7 @@ func TestFindGroupByURLWorksSuccessWithDifferentURLAndMethod(t *testing.T) {
 	method := "GET"
 
 	groups := []RequestModelGroup{
-		RequestModelGroup{
+		{
 			URL:    "/test/path",
 			Method: "POST",
 		},

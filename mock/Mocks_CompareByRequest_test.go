@@ -152,7 +152,6 @@ func TestCompareByRequestFailedForNotJsonRequest(t *testing.T) {
 	}
 }
 
-// ЗАметили такой баг на одном из реальных кейсов
 func TestCompareByRequestFailedWithPhoneAndLongToken(t *testing.T) {
 	// Arrange
 

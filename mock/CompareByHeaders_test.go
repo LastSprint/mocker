@@ -2,7 +2,6 @@ package mock
 
 import "testing"
 
-// проверяет, что метод `CompareByHeaders` вернет nil в случае если в моках нет записанных `RequestHeaders`
 func TestCompareByHeadersReturnsNilForEmptyRequestHeader(t *testing.T) {
 
 	// Arrange
@@ -28,7 +27,7 @@ func TestCompareByHeadersReturnsNilForEmptyRequestHeader(t *testing.T) {
 	// Assert
 
 	if result != nil {
-		t.Error("Если в моке не указан `RequestHeaders` то должен вернуться nil, однако вернулось:", result)
+		t.Error("If there isn't`RequestHeaders` in mock then nil should be returned, but got", result)
 	}
 }
 
@@ -61,12 +60,12 @@ func TestCompareByHeadersReturnsRightRequest(t *testing.T) {
 	// Assert
 
 	if result == nil {
-		t.Error("Должен был вернуться мок, но ничего не вернулось")
+		t.Error("Expected a mock")
 		return
 	}
 
 	if result.URL != right.URL {
-		t.Error("Ожидалось получить: ", right, "Однако было получено:", result)
+		t.Error("Expected: ", right, "But got: ", result)
 	}
 }
 
@@ -95,7 +94,7 @@ func TestCompareByHeadersReturnsNilWhenThereIsNotRightMock(t *testing.T) {
 	// Assert
 
 	if result != nil {
-		t.Error("Должен был вернуться nil, но ничего вернулось:", result)
+		t.Error("Expected nil but got: ", result)
 		return
 	}
 }
@@ -130,11 +129,11 @@ func TestCompareByHeadersReturnsRightRequestWithDifferentMocks(t *testing.T) {
 	// Assert
 
 	if result == nil {
-		t.Error("Должен был вернуться мок, но ничего не вернулось")
+		t.Error("Expected a mock")
 		return
 	}
 
 	if result.URL != right.URL {
-		t.Error("Ожидалось получить: ", right, "Однако было получено:", result)
+		t.Error("Expected: ", right, "But got: ", result)
 	}
 }

@@ -5,14 +5,13 @@ import (
 	"strings"
 )
 
-type parameterSlice []string
-
-func (a parameterSlice) Len() int           { return len(a) }
-func (a parameterSlice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a parameterSlice) Less(i, j int) bool { return a[i] < a[j] }
-
-// CompareURLPath сравнивает для URL по специальным правилам.
-// При этом доспукается, что lhs URL может быть шаблоном. Тогда mock будет сравниваться с ним как с шаблоном.
+// CompareURLPath compares urls via specific rules
+// and lhs my be an URL template.
+// this can compare:
+// https://host.dom/path/to/{userId}?param1=2&param2={param2}
+// with
+// https://host.dom/path/to/1?param1=2&param2=2
+// for more details look at tests
 func CompareURLPath(lhs, mock string) bool {
 
 	splitedLHS := strings.Split(lhs, "/")

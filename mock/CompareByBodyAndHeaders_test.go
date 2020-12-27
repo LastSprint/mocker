@@ -2,7 +2,7 @@ package mock
 
 import "testing"
 
-// Проверяет что метод `CompareByBody` вернет nil в случае если в группе все моки без хедеров и тела
+// Checks that `CompareByBody` will return nil if all macks dont have body and headers
 func TestCompareByBodyAndHeadersReturnsNilForEmptyInput(t *testing.T) {
 	// Arrange
 
@@ -28,11 +28,11 @@ func TestCompareByBodyAndHeadersReturnsNilForEmptyInput(t *testing.T) {
 	// Assert
 
 	if result != nil {
-		t.Fatal("Ожидалось что вернется nil, а вернулось:", result)
+		t.Fatal("Expected nil but got:", result)
 	}
 }
 
-// Проверяет что `CompareByBody` вернет тот мок, у которого совпадают и заголовки и тело
+// Checks that `CompareByBody` will return mock witch same body and header
 func TestCompareByBodyAndHeadersReturnsEntireMatchedItemFirstly(t *testing.T) {
 	// Arrange
 
@@ -71,7 +71,7 @@ func TestCompareByBodyAndHeadersReturnsEntireMatchedItemFirstly(t *testing.T) {
 	}
 }
 
-// Проверяет что `CompareByBody` вернет тот мок, у которого совпадает тело, если нет того, у которого совпадает все
+// checks that `CompareByBody` will return mock with same body if there isn't mock with same body and headers
 func TestCompareByBodyAndHeadersReturnsBodyMatchedItemSecondly(t *testing.T) {
 	// Arrange
 
@@ -110,7 +110,7 @@ func TestCompareByBodyAndHeadersReturnsBodyMatchedItemSecondly(t *testing.T) {
 	}
 }
 
-// Проверяет что `CompareByBody` вернет тот мок, у которого совпадут заголовки, если нет того, у которого совпадает тело
+// checks that `CompareByBody` will return mock which has the same headers if there isn't mock which have the same body
 func TestCompareByBodyAndHeadersReturnsHadersMatchedItemThirdly(t *testing.T) {
 	// Arrange
 

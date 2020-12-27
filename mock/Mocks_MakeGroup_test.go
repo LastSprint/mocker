@@ -173,19 +173,19 @@ func TestMakeGroupWorkSuccessForManyDifferentMocks(t *testing.T) {
 	// Arrange
 
 	mocks := []RequestModel{
-		RequestModel{
+		{
 			URL:    "/path/to",
 			Method: "PUT",
 		},
-		RequestModel{
+		{
 			URL:    "/path/to",
 			Method: "GET",
 		},
-		RequestModel{
+		{
 			URL:    "/path/to/point",
 			Method: "GET",
 		},
-		RequestModel{
+		{
 			URL:    "/path/to/point",
 			Method: "Post",
 		},

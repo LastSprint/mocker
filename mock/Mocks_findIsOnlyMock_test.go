@@ -15,11 +15,11 @@ func TestFindIsOnlyMockReturnsRightModel(t *testing.T) {
 
 	group := RequestModelGroup{
 		models: []RequestModel{
-			RequestModel{},
-			RequestModel{},
-			RequestModel{},
-			RequestModel{},
-			RequestModel{
+			{},
+			{},
+			{},
+			{},
+			{
 				IsOnly: newTrue(),
 			},
 		},
@@ -51,11 +51,11 @@ func TestFindIsOnlyMockReturnsFirstIsOnly(t *testing.T) {
 
 	group := RequestModelGroup{
 		models: []RequestModel{
-			RequestModel{},
-			RequestModel{},
+			{},
+			{},
 			firstIsOnly,
-			RequestModel{},
-			RequestModel{},
+			{},
+			{},
 			secondIsOnly,
 		},
 	}
@@ -80,10 +80,7 @@ func TestFindIsOnlyMockReturnsNil(t *testing.T) {
 
 	group := RequestModelGroup{
 		models: []RequestModel{
-			RequestModel{},
-			RequestModel{},
-			RequestModel{},
-			RequestModel{},
+			{}, {}, {}, {},
 		},
 	}
 
