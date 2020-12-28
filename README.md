@@ -3,7 +3,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/LastSprint/mocker)](https://goreportcard.com/report/github.com/LastSprint/mocker)
 
 <p align="center">
-  <img src="logo.svg">
+  <img src="logo.png">
 </p>
 
 # Mocker
