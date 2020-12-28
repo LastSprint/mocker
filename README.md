@@ -1,9 +1,11 @@
-<object data="logo.pdf" type="application/pdf" width="600" height="250"> 
-</object>
-
 ![Actions](https://github.com/LastSprint/mocker/workflows/Build/badge.svg)
 [![codecov](https://codecov.io/gh/LastSprint/mocker/branch/master/graph/badge.svg)](https://codecov.io/gh/LastSprint/mocker)
 [![Go Report Card](https://goreportcard.com/badge/github.com/LastSprint/mocker)](https://goreportcard.com/report/github.com/LastSprint/mocker)
+
+<p align="center">
+  <img src="logo.svg">
+</p>
+
 # Mocker
 
 This is a web server which is used to imitate a real backend.
