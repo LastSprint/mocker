@@ -1,10 +1,11 @@
-![Actions](https://github.com/LastSprint/mocker/workflows/Build/badge.svg)
-[![codecov](https://codecov.io/gh/LastSprint/mocker/branch/master/graph/badge.svg)](https://codecov.io/gh/LastSprint/mocker)
-[![Go Report Card](https://goreportcard.com/badge/github.com/LastSprint/mocker)](https://goreportcard.com/report/github.com/LastSprint/mocker)
-
 <p align="center">
   <img src="logo.png">
 </p>
+
+
+![Actions](https://github.com/LastSprint/mocker/workflows/Build/badge.svg)
+[![codecov](https://codecov.io/gh/LastSprint/mocker/branch/master/graph/badge.svg)](https://codecov.io/gh/LastSprint/mocker)
+[![Go Report Card](https://goreportcard.com/badge/github.com/LastSprint/mocker)](https://goreportcard.com/report/github.com/LastSprint/mocker)
 
 # Mocker
 
