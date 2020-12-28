@@ -1,9 +1,12 @@
+<object data="logo.pdf" type="application/pdf" width="600" height="250"> 
+</object>
+
 ![Actions](https://github.com/LastSprint/mocker/workflows/Build/badge.svg)
 [![codecov](https://codecov.io/gh/LastSprint/mocker/branch/master/graph/badge.svg)](https://codecov.io/gh/LastSprint/mocker)
 [![Go Report Card](https://goreportcard.com/badge/github.com/LastSprint/mocker)](https://goreportcard.com/report/github.com/LastSprint/mocker)
 # Mocker
 
-Это приложение, которое позволяет имитировать работу реального backend'а.
+This is a web server which is used to imitate a real backend.
 
 Само по себе приложения представляет из себя обычный ротуер HTTP-запросов. 
 Приложение принимает запрос из сети, парсит URL и HTTP-method. Затем проходится по известным мокам. Берет мок с подходящим URL и HTTP-method'ом, читает код ответа и тело ответа, а затем возвращает ответ клиенту.
