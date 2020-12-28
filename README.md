@@ -7,8 +7,6 @@
 [![codecov](https://codecov.io/gh/LastSprint/mocker/branch/master/graph/badge.svg)](https://codecov.io/gh/LastSprint/mocker)
 [![Go Report Card](https://goreportcard.com/badge/github.com/LastSprint/mocker)](https://goreportcard.com/report/github.com/LastSprint/mocker)
 
-# Mocker
-
 This is a web server which is used to imitate a real backend.
 
 Само по себе приложения представляет из себя обычный ротуер HTTP-запросов. 
