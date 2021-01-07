@@ -2,7 +2,7 @@ package mock
 
 import (
 	"encoding/json"
-	"reflect"
+	"log"
 	"strings"
 )
 
@@ -144,21 +144,14 @@ func (model *RequestModel) CompareByRequest(requestData []byte) bool {
 		return false
 	}
 
-	var bytes interface{}
-
-	err = json.Unmarshal(requestData, &bytes)
+	res, err := ParametrizedBodyComparator{}.Compare(modeRequestData, requestData)
 
 	if err != nil {
+		log.Println("[ERR] in CompareByRequest", err.Error())
 		return false
 	}
 
-	resultReuqestBytes, err := json.Marshal(bytes)
-
-	if err != nil {
-		return false
-	}
-
-	return reflect.DeepEqual(modeRequestData, resultReuqestBytes)
+	return res
 }
 
 // LookUpByBodyAndHeaders looks up for specific mock by body and headers
