@@ -19,3 +19,4 @@ test_dir/*
 src/github.com/*
 mocker
 sandbox
+.idea
