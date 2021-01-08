@@ -1,0 +1,4 @@
+ignore:
+  - "src/Logs.go"
+  - "src/Utils.go"
+  - "src/FileWorker.go"
