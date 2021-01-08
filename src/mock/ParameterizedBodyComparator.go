@@ -29,54 +29,50 @@ func (cmp ParametrizedBodyComparator) Compare(mock, request []byte) (bool, error
 		var mockObj map[string]interface{}
 		var requestObj map[string]interface{}
 
-		err = json.Unmarshal(mock, &mockObj)
-		err = json.Unmarshal(request, &requestObj)
+		if err = json.Unmarshal(mock, &mockObj); err != nil {
+			return false, err
+		}
 
-		if err != nil {
+		if err = json.Unmarshal(request, &requestObj); err != nil {
 			return false, err
 		}
 
 		return compareObject(mockObj, requestObj), nil
 	}
-
-	if len(mockArr) != len(requestArr) {
-		return false, nil
-	}
-
 	return compareAnyArrays(mockArr, requestArr), nil
 }
 
-func compareAnyArrays(mock, req interface{}) bool {
-	switch mt := mock.(type) {
-	case []map[string]interface{}:
+func compareAnyArrays(mock, req []interface{}) bool {
 
-		rv, ok := req.([]map[string]interface{})
-		if !ok {
-			return false
-		}
-		if !compareObjectArrays(mt, rv) {
-			return false
-		}
-	case [][]interface{}:
-		rv, ok := req.([][]interface{})
-		if !ok {
-			return false
-		}
+	if len(mock) != len(req) {
+		return false
+	}
 
-		if len(mt) != len(rv) {
-			return false
-		}
+	for i := 0; i < len(mock); i++ {
+		switch mt := mock[i].(type) {
+		case map[string]interface{}:
 
-		for i, _ := range mt {
-			if !compareAnyArrays(mt[i], rv[i]) {
+			rv, ok := req[i].(map[string]interface{})
+			if !ok {
+				return false
+			}
+
+			result := make([]map[string]interface{}, len(mock))
+
+			for i, m := range mock {
+				result[i] = m.(map[string]interface{})
+			}
+
+			if !compareObject(mt, rv) {
+				return false
+			}
+		default:
+			if !reflect.DeepEqual(mock, req) {
 				return false
 			}
 		}
-	default:
-		if !reflect.DeepEqual(mock, req) {
-			return false
-		}
 	}
+
 	return true
 }
 
@@ -100,9 +96,9 @@ func compareObject(mock, request map[string]interface{}) bool {
 		// check that mock value is string
 
 		strValue, ok := value.(string)
+		trimmed := strings.TrimSpace(strValue)
 
-		if ok {
-			trimmed := strings.TrimSpace(strValue)
+		if ok && len(trimmed) >= 2 {
 
 			if trimmed[0] == '{' && trimmed[len(trimmed)-1] == '}' {
 				if !calculatePatternExpression(trimmed, reqVal) {
@@ -127,35 +123,18 @@ func compareObject(mock, request map[string]interface{}) bool {
 
 		// it's not an object but in can be an array
 		switch mt := value.(type) {
-		case []map[string]interface{}:
-
-			rv, ok := reqVal.([]map[string]interface{})
+		case []interface{}:
+			rv, ok := reqVal.([]interface{})
 			if !ok {
 				return false
 			}
-			if !compareObjectArrays(mt, rv) {
+			if !compareAnyArrays(mt, rv) {
 				return false
 			}
 		default:
 			if !reflect.DeepEqual(value, reqVal) {
 				return false
 			}
-		}
-	}
-
-	return true
-}
-
-func compareObjectArrays(mock, req []map[string]interface{}) bool {
-
-	if len(mock) != len(req) {
-		return false
-	}
-
-	for index, _ := range mock {
-
-		if !compareObject(mock[index], req[index]) {
-			return false
 		}
 	}
 
@@ -182,13 +161,6 @@ func calculatePatternExpression(pattern string, requestValue interface{}) bool {
 		return checkInequality(right, requestValue)
 	case ">":
 		switch vt := requestValue.(type) {
-		case int:
-			val, err := strconv.Atoi(right)
-			if err != nil {
-				log.Println("[ERR] cant convert right value to int", right)
-				return false
-			}
-			return val > vt
 		case float64:
 			val, err := strconv.ParseFloat(right, 64)
 			if err != nil {
@@ -203,13 +175,6 @@ func calculatePatternExpression(pattern string, requestValue interface{}) bool {
 		}
 	case "<":
 		switch vt := requestValue.(type) {
-		case int:
-			val, err := strconv.Atoi(right)
-			if err != nil {
-				log.Println("[ERR] cant convert right value to int", right)
-				return false
-			}
-			return vt < val
 		case float64:
 			val, err := strconv.ParseFloat(right, 64)
 			if err != nil {
@@ -224,13 +189,6 @@ func calculatePatternExpression(pattern string, requestValue interface{}) bool {
 		}
 	case "<=":
 		switch vt := requestValue.(type) {
-		case int:
-			val, err := strconv.Atoi(right)
-			if err != nil {
-				log.Println("[ERR] cant convert right value to int", right)
-				return false
-			}
-			return vt <= val
 		case float64:
 			val, err := strconv.ParseFloat(right, 64)
 			if err != nil {
@@ -245,13 +203,6 @@ func calculatePatternExpression(pattern string, requestValue interface{}) bool {
 		}
 	case ">=":
 		switch vt := requestValue.(type) {
-		case int:
-			val, err := strconv.Atoi(right)
-			if err != nil {
-				log.Println("[ERR] cant convert right value to int", right)
-				return false
-			}
-			return vt >= val
 		case float64:
 			val, err := strconv.ParseFloat(right, 64)
 			if err != nil {

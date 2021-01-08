@@ -15,6 +15,24 @@ func TestParametrizedBodyComparator_Compare(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			"Json parsing error. Request",
+			args{
+				mock:    []byte(`{"name": "alice"}`),
+				request: []byte(`{"name": "alice"`),
+			},
+			false,
+			true,
+		},
+		{
+			"Json parsing error. Mock",
+			args{
+				mock:    []byte(`{"name": "alice"`),
+				request: []byte(`{"name": "alice"}`),
+			},
+			false,
+			true,
+		},
+		{
 			"Single field without template with same names",
 			args{
 				mock:    []byte(`{"name": "alice"}`),
@@ -42,9 +60,45 @@ func TestParametrizedBodyComparator_Compare(t *testing.T) {
 			false,
 		},
 		{
+			"Single Field. Different len arrays",
+			args{
+				mock:    []byte(`{"name": [1,2,3]}`),
+				request: []byte(`{"name": [1,2]}`),
+			},
+			false,
+			false,
+		},
+		{
+			"Root arrs. Different len arrays",
+			args{
+				mock:    []byte(`[1,2,3]`),
+				request: []byte(`[1,2]`),
+			},
+			false,
+			false,
+		},
+		{
+			"Root arrs. Same arrays",
+			args{
+				mock:    []byte(`[1,2,3]`),
+				request: []byte(`[1,2,3]`),
+			},
+			true,
+			false,
+		},
+		{
+			"Root arrs. Different arrays",
+			args{
+				mock:    []byte(`[1,2,3]`),
+				request: []byte(`[1,2,4]`),
+			},
+			false,
+			false,
+		},
+		{
 			"Single field with same type and different order",
 			args{
-				mock:    []byte(`{"name": [1,2,3]`),
+				mock:    []byte(`{"name": [1,2,3]}`),
 				request: []byte(`{"name": [2,1,3]}`),
 			},
 			false,
@@ -53,7 +107,7 @@ func TestParametrizedBodyComparator_Compare(t *testing.T) {
 		{
 			"Single field with different",
 			args{
-				mock:    []byte(`{"name": [false,true,false]`),
+				mock:    []byte(`{"name": [false,true,false]}`),
 				request: []byte(`{"name": [2,1,3]}`),
 			},
 			false,
@@ -244,6 +298,69 @@ func TestParametrizedBodyComparator_Compare(t *testing.T) {
 			args{
 				mock:    []byte(`{"name": "{ name <= 13 }"}`),
 				request: []byte(`{"name": 14}`),
+			},
+			false,
+			false,
+		},
+		{
+			"Objects with different fields count",
+			args{
+				mock:    []byte(`{"name": "123"}`),
+				request: []byte(`{"name": 14, "field": 1}`),
+			},
+			false,
+			false,
+		},
+		{
+			"Objects with different nested objects. Request have different type",
+			args{
+				mock:    []byte(`{"name": {"name": ""}}`),
+				request: []byte(`{"name": ""}`),
+			},
+			false,
+			false,
+		},
+		{
+			"Root Array With Nested Array. Same",
+			args{
+				mock:    []byte(`[[1,2,3],[1,2,3]]`),
+				request: []byte(`[[1,2,3],[1,2,3]]`),
+			},
+			true,
+			false,
+		},
+		{
+			"Root Array With Nested Array. Different",
+			args{
+				mock:    []byte(`[[1,2,4],[1,2,3]]`),
+				request: []byte(`[[1,2,3],[1,2,3]]`),
+			},
+			false,
+			false,
+		},
+		{
+			"Root Array With Objects. Same",
+			args{
+				mock:    []byte(`[{"name": ""}, {"name": ""}]`),
+				request: []byte(`[{"name": ""}, {"name": ""}]`),
+			},
+			true,
+			false,
+		},
+		{
+			"Root Array With Objects. Different",
+			args{
+				mock:    []byte(`[{"name": ""}, {"name": ""}]`),
+				request: []byte(`[{"name": ""}, {"name": "13"}]`),
+			},
+			false,
+			false,
+		},
+		{
+			"Root Array With Objects. DifferentTypes",
+			args{
+				mock:    []byte(`[{"name": ""}, {"name": ""}]`),
+				request: []byte(`[1, 1]`),
 			},
 			false,
 			false,
