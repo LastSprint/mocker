@@ -15,9 +15,9 @@ import (
 // }
 //
 // and this mock will equal to any request with the same json structure
-type ParametrizedBodyComparator struct { }
+type ParametrizedBodyComparator struct{}
 
-func (cmp ParametrizedBodyComparator) Compare(mock, request []byte) (bool, error){
+func (cmp ParametrizedBodyComparator) Compare(mock, request []byte) (bool, error) {
 
 	var mockArr []interface{}
 	var requestArr []interface{}
@@ -39,7 +39,9 @@ func (cmp ParametrizedBodyComparator) Compare(mock, request []byte) (bool, error
 		return compareObject(mockObj, requestObj), nil
 	}
 
-	if len(mockArr) != len(requestArr) { return false, nil }
+	if len(mockArr) != len(requestArr) {
+		return false, nil
+	}
 
 	return compareAnyArrays(mockArr, requestArr), nil
 }
@@ -49,18 +51,26 @@ func compareAnyArrays(mock, req interface{}) bool {
 	case []map[string]interface{}:
 
 		rv, ok := req.([]map[string]interface{})
-		if !ok { return false }
+		if !ok {
+			return false
+		}
 		if !compareObjectArrays(mt, rv) {
 			return false
 		}
 	case [][]interface{}:
 		rv, ok := req.([][]interface{})
-		if !ok { return false }
+		if !ok {
+			return false
+		}
 
-		if len(mt) != len(rv) { return false }
+		if len(mt) != len(rv) {
+			return false
+		}
 
 		for i, _ := range mt {
-			if !compareAnyArrays(mt[i], rv[i]) { return false }
+			if !compareAnyArrays(mt[i], rv[i]) {
+				return false
+			}
 		}
 	default:
 		if !reflect.DeepEqual(mock, req) {
@@ -72,9 +82,9 @@ func compareAnyArrays(mock, req interface{}) bool {
 
 func compareObject(mock, request map[string]interface{}) bool {
 	// Json is structure that can contains nested variables.
-	// and two JSON can be equal only if they have equal number of keys 
+	// and two JSON can be equal only if they have equal number of keys
 	// firstly check that keys count is equal
-	
+
 	if len(mock) != len(request) {
 		return false
 	}
@@ -94,7 +104,7 @@ func compareObject(mock, request map[string]interface{}) bool {
 		if ok {
 			trimmed := strings.TrimSpace(strValue)
 
-			if trimmed[0] == '{' && trimmed[len(trimmed) - 1] == '}' {
+			if trimmed[0] == '{' && trimmed[len(trimmed)-1] == '}' {
 				if !calculatePatternExpression(trimmed, reqVal) {
 					return false
 				}
@@ -120,7 +130,9 @@ func compareObject(mock, request map[string]interface{}) bool {
 		case []map[string]interface{}:
 
 			rv, ok := reqVal.([]map[string]interface{})
-			if !ok { return false }
+			if !ok {
+				return false
+			}
 			if !compareObjectArrays(mt, rv) {
 				return false
 			}
@@ -136,7 +148,9 @@ func compareObject(mock, request map[string]interface{}) bool {
 
 func compareObjectArrays(mock, req []map[string]interface{}) bool {
 
-	if len(mock) != len(req) { return false }
+	if len(mock) != len(req) {
+		return false
+	}
 
 	for index, _ := range mock {
 
