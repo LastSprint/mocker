@@ -19,8 +19,8 @@ jobs:
       uses: actions/checkout@v1
 
     - name: Build
-      run: go build -v
+      run: cd src; go build -v
       
     - name: Test mock
-      run: go test ./mock -race -coverprofile=coverage.txt -covermode=atomic && bash <(curl -s https://codecov.io/bash)
+      run: cd src; go test ./mock -race -coverprofile=coverage.txt -covermode=atomic && bash <(curl -s https://codecov.io/bash)
       

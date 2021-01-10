@@ -1,0 +1,44 @@
+version: '3'
+services:
+  mocker:
+    container_name: mocker # it's metter for wather.sh
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: "./mocker"
+    volumes:
+      - ./logs:/var/log
+      - ./mocks:/mocks
+    ports:
+      - 8844:1111 # change on your port
+    environment:
+      MOCKER_MOCKS_ROOT_DIR: /mocks # depends on mounted volumes
+      MOCKER_SERVER_PORT: 1111
+      MOCKER_LOG_PATH: /var/log # depends on mounted volumes
+    networks:
+      - mocker_network
+
+  editor: # web GUI for editing
+    image: filebrowser/filebrowser
+    restart: unless-stopped
+    ports:
+      - 8822:80 # change on your port
+    volumes:
+      - ./mocks:/srv # the same as in mocker
+      - .filebrowser.db:/database.db
+      - .filebrowser_config.json:/.filebrowser.json
+
+  fswather:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: FSWatherDockerfile
+    volumes:
+      - ./mocks:/mocks
+    networks:
+      - mocker_network
+
+networks:
+  mocker_network:
+    driver: bridge
