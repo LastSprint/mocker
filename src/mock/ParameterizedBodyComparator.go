@@ -101,7 +101,7 @@ func compareObject(mock, request map[string]interface{}) bool {
 		if ok && len(trimmed) >= 2 {
 
 			if trimmed[0] == '{' && trimmed[len(trimmed)-1] == '}' {
-				if !calculatePatternExpression(trimmed, reqVal) {
+				if !calculatePattern(trimmed, reqVal) {
 					return false
 				}
 				continue
@@ -141,7 +141,7 @@ func compareObject(mock, request map[string]interface{}) bool {
 	return true
 }
 
-func calculatePatternExpression(pattern string, requestValue interface{}) bool {
+func calculatePattern(pattern string, requestValue interface{}) bool {
 
 	patternLen := len(pattern) - 1
 	patternExpression := strings.TrimSpace(pattern[1:patternLen])
@@ -156,6 +156,10 @@ func calculatePatternExpression(pattern string, requestValue interface{}) bool {
 
 	right := split[2]
 
+	return calculatePatternWithExpression(operation, right, requestValue)
+}
+
+func calculatePatternWithExpression(operation, right string, requestValue interface{}) bool {
 	switch operation {
 	case "!=":
 		return checkInequality(right, requestValue)
