@@ -381,3 +381,208 @@ func TestParametrizedBodyComparator_Compare(t *testing.T) {
 		})
 	}
 }
+
+func TestParametrizedBodyComparator_CompareWithExpressionInTemplate(t *testing.T) {
+	type args struct {
+		mock    []byte
+		request []byte
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		// Operation <
+		{
+			"Operation <. Template isn't int",
+			args{
+				mock:    []byte(`{"age":"{ age < string }"}`),
+				request: []byte(`{"age": 15 }`),
+			},
+			false,
+			false,
+		},
+		{
+			"Operation <. Request isn't int",
+			args{
+				mock:    []byte(`{"age":"{ age < 15 }"}`),
+				request: []byte(`{"age": "string" }`),
+			},
+			false,
+			false,
+		},
+		{
+			"Operation <. Request greater then value",
+			args{
+				mock:    []byte(`{"age":"{ age < 15 }"}`),
+				request: []byte(`{"age": 16}`),
+			},
+			false,
+			false,
+		},
+		{
+			"Operation <. Request less then value",
+			args{
+				mock:    []byte(`{"age":"{ age < 15 }"}`),
+				request: []byte(`{"age": 14}`),
+			},
+			true,
+			false,
+		},
+		// Operation >
+		{
+			"Operation >. Template isn't int",
+			args{
+				mock:    []byte(`{"age":"{ age > string }"}`),
+				request: []byte(`{"age": 15}`),
+			},
+			false,
+			false,
+		},
+		{
+			"Operation >. Request greater then value",
+			args{
+				mock:    []byte(`{"age":"{ age > 15 }"}`),
+				request: []byte(`{"age": 16}`),
+			},
+			true,
+			false,
+		},
+		{
+			"Operation >. Request less then value",
+			args{
+				mock:    []byte(`{"age":"{ age > 15 }"}`),
+				request: []byte(`{"age": 14}`),
+			},
+			false,
+			false,
+		},
+		// Operation <=
+		{
+			"Operation <=. Template isn't int",
+			args{
+				mock:    []byte(`{"age":"{ age <= string }"}`),
+				request: []byte(`{"age": 15}`),
+			},
+			false,
+			false,
+		},
+		{
+			"Operation <=. Request greater then value",
+			args{
+				mock:    []byte(`{"age":"{ age <= 15 }"}`),
+				request: []byte(`{"age": 16}`),
+			},
+			false,
+			false,
+		},
+		{
+			"Operation <=. Request less then value",
+			args{
+				mock:    []byte(`{"age":"{ age <= 15 }"}`),
+				request: []byte(`{"age": 14}`),
+			},
+			true,
+			false,
+		},
+		{
+			"Operation <=. Request equal to template value",
+			args{
+				mock:    []byte(`{"age":"{ age <= 15 }"}`),
+				request: []byte(`{"age": 15}`),
+			},
+			true,
+			false,
+		},
+		// Operation >=
+		{
+			"Operation >=. Template isn't int",
+			args{
+				mock:    []byte(`{"age":"{ age >= string }"}`),
+				request: []byte(`{"age": 15}`),
+			},
+			false,
+			false,
+		},
+		{
+			"Operation >=. Request greater then value",
+			args{
+				mock:    []byte(`{"age":"{ age >= 15 }"}`),
+				request: []byte(`{"age": 16}`),
+			},
+			true,
+			false,
+		},
+		{
+			"Operation >=. Request less then value",
+			args{
+				mock:    []byte(`{"age":"{ age >= 15 }"}`),
+				request: []byte(`{"age": 14}`),
+			},
+			false,
+			false,
+		},
+		{
+			"Operation >=. Request equal to template value",
+			args{
+				mock:    []byte(`{"age":"{ age >= 15 }"}`),
+				request: []byte(`{"age": 15}`),
+			},
+			true,
+			false,
+		},
+		// Operation !=
+		{
+			"Operation !=. Template isn't int",
+			args{
+				mock:    []byte(`{"age":"{ age != string }"}`),
+				request: []byte(`{"age": 15}`),
+			},
+			false,
+			false,
+		},
+		{
+			"Operation !=. Request greater then value",
+			args{
+				mock:    []byte(`{"age":"{ age != 15 }"}`),
+				request: []byte(`{"age": 16}`),
+			},
+			true,
+			false,
+		},
+		{
+			"Operation !=. Request less then value",
+			args{
+				mock:    []byte(`{"age":"{ age != 15 }"}`),
+				request: []byte(`{"age": 14}`),
+			},
+			true,
+			false,
+		},
+		{
+			"Operation !=. Request equal to template value",
+			args{
+				mock:    []byte(`{"age":"{ age != 15 }"}`),
+				request: []byte(`{"age": 15}`),
+			},
+			false,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmp := &ParametrizedBodyComparator{}
+			got, err := cmp.Compare(tt.args.mock, tt.args.request)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Compare() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Compare() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

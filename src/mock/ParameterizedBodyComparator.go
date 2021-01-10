@@ -227,13 +227,6 @@ func calculatePatternWithExpression(operation, right string, requestValue interf
 
 func checkInequality(l string, r interface{}) bool {
 	switch vt := r.(type) {
-	case int:
-		val, err := strconv.Atoi(l)
-		if err != nil {
-			log.Println("[ERR] cant convert right value to int", l)
-			return false
-		}
-		return val != vt
 	case float64:
 		val, err := strconv.ParseFloat(l, 64)
 		if err != nil {
