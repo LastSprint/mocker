@@ -32,9 +32,6 @@ However, if you do need relation, use matching by query or body parameters.
 
 The way the mocker works is pretty simple, but it’s much more complex if you look under the hood (:
 
-
-Принцип работы простой, но под капотом все немного сложнее (:
-
 ## Mocks
 
 Mocks are Json files:
