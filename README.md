@@ -7,39 +7,37 @@
 [![codecov](https://codecov.io/gh/LastSprint/mocker/branch/master/graph/badge.svg)](https://codecov.io/gh/LastSprint/mocker)
 [![Go Report Card](https://goreportcard.com/badge/github.com/LastSprint/mocker)](https://goreportcard.com/report/github.com/LastSprint/mocker)
 
-# `Mocker` — веб-сервер, который эмулирует поведение настоящего бэкенда.
+# `Mocker` — a Web Server Emulating a Real Backend
 
-# Фичи
+# Features
 
-- URL-Query prams matching — выбирает мок в зависимости от query параметров в запросе и в моке.
-- JSON-Body prams matching — выбирает мок в зависимости от JSON-тела в запросе и в моке.
-- Caching Proxy — может проксировать запросы клиента на реальный бэк, записывать результат в мок и возвращать его клиенту.
-- Отключение определенного мока или всех моков, кроме одного.
-- Задержка ответа для конкретного мока.
-- Итеративные ответы: несколько моков с определенным URL будут возвращаться по очереди — если нет матчинга по параметрам.
+- URL-Query prams matching — selects a mock depending on query parameters given in a query and in a mock.
+- JSON-Body prams matching — selects a mock depending on a JSON body in a query and in a mock.
+- Caching Proxy — proxies client queries to an actual backend, records the result in a mock and returns it to the client.
+- Individual mocks or all mocks except for a selected one can be disabled.
+- Response can be delayed for a selected mock.
+- Iterative responses: several mocks with a specified URL will be returned one at a time — if no parameters are matched.
 
-**Мы не планируем поддерживать реляцию моков**. Моки — это просто файлы: они никак не связаны между собой и никак не изменяются самим Mocker-ом.
+**We’re not planning to support mock relation**. Mocks are just files: they are in no way connected to each other or altered by the Mocker itself.
 
-Поддержка реляции сильно усложнит сервис и не даст особых плюсов: если вы пишете что-то на моках, согласованность данных вам вряд ли необходимо.
+Supporting relation would complicate the service without providing any advantages: if you write something using mocks, you hardly need data relation.
 
-Если реляция вам все-таки нужна, используйте матчинг query или body параметров.
+However, if you do need relation, use matching by query or body parameters.
 
-# Принцип работы
+# How it Works
 
-Принцип работы прост:
-- Пользователи пишут моки. Мок описывает что `Mocker` должен вернуть в ответ на запрос.
-- `Mocker` читает данные вов ремя старта либо после запрос `GET /update_models` (ниже будет описано как делать это автоматически)
-- Когда `Mocker` получает запрос он находит подходящий мок и возвращет его клиенту. 
+- Mocks are written by users. A mock describes what the Mocker has to return in response to a query.
+- `Mocker` reads data when launched or following a `GET /update_models query` (read on to learn how to make it automated)
+- When the `Mocker` receives a query it finds a relevant mock and returns it to a client.
 
-- Пользователи пишут моки. Мок описывает, что `Mocker` должен вернуть в ответ на запрос.
-- `Mocker` читает данные во время старта, либо после запроса `GET /update_models` (ниже будет описано, как делать это автоматически).
-- Когда `Mocker` получает запрос, он находит подходящий мок и возвращает его клиенту.
+The way the mocker works is pretty simple, but it’s much more complex if you look under the hood (:
+
 
 Принцип работы простой, но под капотом все немного сложнее (:
 
-## Моки
+## Mocks
 
-Моковые файлы представляют из себя `Json` формата:
+Mocks are Json files:
 ```
  {
     "isDisabled": bool,
@@ -59,22 +57,23 @@
  }
 ```
 
-Буквально здесь записано следующее:
+This literally means the following:
 
-На запрос с `URL = url` и `Method = method` вернуть ответ `response` с кодом `statusCode`
+If a query with `URL = url` and `Method = method is received`, return `response` with a code `statusCode`
 
 ### `url`
 
-Может быть следующих видов:
+The following types can be used:
 
 #### `/path/to/endpoint` 
-Обычный URL. Во время получения запроса сервис будет сравнивать строки посимвольно.
+A simple URL. In response to a query a service will compare strings one character at a time.
 
 #### `/path/to/endpoint/{number}`
 
-URL с path-паттерном. Мок с таким URL будет реагировать на любой запрос, который удовлетворяет этому шаблону.
+A URL with a path pattern. A mock with such a URL will react to any query compliant with the set template.
 
-Например:
+For example:
+
 ```
 /path/to/endpoint/1 --> OK
 /path/to/endpoint/item --> OK
@@ -83,31 +82,30 @@ URL с path-паттерном. Мок с таким URL будет реагир
 
 #### `/path/to/endpoint/data?param={value}`
 
-URL c query-паттерном. Мок с таким URL сработает на запрос, содержащий заданные параметры. При этом если одного из параметров не будет в запросе,  он не сматчится с шаблоном.
+A URL with a query pattern. A mock with such a URL will react to a query containing whatever parameters were set. 
+Notice that a query with any of the parameters missing will not match a template.
 
-**ВНИМАНИЕ**
+**NOTE**:
 
-URL должен начинатья с `/`
+A URL must start with a slash (`/`)
 
 ### `method`
 
-Пишите названия HTTP методов в UpperCase. 
-
-**НЕ** `get` **А**  `GET` 
+Names of all HTTP methods should be written in UpperCase (i.e. write `GET` instead of `get`)
 
 ### `statusCode`
 
-Любое целое число. Желательно из известных [HTTP-кодов](https://ru.wikipedia.org/wiki/Список_кодов_состояния_HTTP)
+Any integer, preferably one of the known [HTTP codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
 
 ### `response`
 
-Это поле содержит `Json`, который вернется в ответ на запрос. 
+This field contains a `Json` to be returned in response to a query.
 
 ### `request`
 
-Поле содержит данные для поиска конкретного мока. Для него работает параметризация.
+This field contains data needed to search a specific mock. Here we can apply parameterization.
 
-Допустим, мы хотим замокать процесс оформления заказа:
+Say, we want to mock an ordering process:
 
 ```JSON
 {
@@ -124,11 +122,12 @@ URL должен начинатья с `/`
   }
 }
 ```
-Тогда на запрос оформления заказа из магазина `123` при оплате по карте всегда будет отдан мок выше.
+If an order is made from shop `123` and paid by a card, a query will return the mock given above.
 
-Но есть загвоздка. Такой мок будет сматчен с запросом только в том случае, если в запросе массив `items` пуст. То есть для каждой корзины (с разными товарами) придется задавать новый мок.
+But there’s a catch. Such a mock will only be matched to a query, if an `items` array in the query is empty. 
+In other words, we’ll have to create a new mock for each cart (containing different items).
 
-Чтобы это обойти, обновим мок:
+To avoid that we need to update the mock:
 
 ```JSON
 {
@@ -146,9 +145,9 @@ URL должен начинатья с `/`
 }
 ```
 
-Теперь мок будет возвращаться вне зависимости от значения `items`.
+Now the mock will be received regardless of the `items` value.
 
-А теперь мы хотим, чтобы на запрос, способ оплаты которого не равен `card`, возвращалась ошибка.
+Now let’s say we want queries where payment does not equal `card` to return an error.
 
 ```JSON
 {
@@ -166,37 +165,37 @@ URL должен начинатья с `/`
 }
 ```
 
-#### Шаблоны
+#### Templates
 
-- `{value}` — шаблон, описывающий любое значение.
-- `{value != | > | < | >= | <= $const$ }` — шаблон с выражением. Через `|` перечислены поддерживаемые операторы.
+- `{value}` — a template describing a value.
+- `{value != | > | < | >= | <= $const$ }` — an expression template with all applicable operators separated by `|`
 
-Операторы работают для ограниченного набора типов:
+The operators apply to a limited set of types:
 
-- `!=` для `String`, `Int`, `Dobule`
-- `>`, `<`, `>=`, `<=` для `Int`, `Dobule`
+- `!=` for `String`, `Int`, `Dobule`
+- `>`, `<`, `>=`, `<=` for `Int`, `Dobule`
 
-Особенности шаблонов с выражениями:
+What you should remember about expression templates is:
 
-- Если вы указали несуществующую операцию, мок сматчится.
-- Если тип данных в `request` не может быть использован в этом операторе, мок не сматчится.
-- Если значение `$const$` не может быть приведено к типу данных в `request`, мок не сматчится.
+- If you stated a non-existent operation, your mock will match.
+- If data type in `request` can not be used in this operator, your mock will not match.
+- If `$const$` value does not comply with the data type given in `request`, your mock will not match.
 
-Внутри шаблона можно писать что угодно. Мы **рекомендуем** дублировать имя переменной, потому что в дальнейшем функциональность шаблонов с операторами будет расширяться.
+You can write anything you want in the template, but we advise you to copy the name of your variable, because functionality of templates with operators is going to be extended as we go forward.
 
 ### `requestHeaders`
 
-Если запрос содержит те же хедеры, что указаны в этом поле, мок будет сматчен.
+If a query contains the headers specified in this field, you mock will match.
 
-Мок будет считаться сматченным, только если выполнены все условия матчинга (query, request, headers).
+A mock will only be considered matched if all match conditions (query, request, headers) are met.
 
 ### `responseHeaders`
 
-Содержит список пар `key-value`, где `key` — имя хедера, а `value` — значение.
+Contains the list of `key-value` pairs, where `key` is a name of a header, and `value` is a value.
 
-Например, если мы хотим чтоб мокер вернул заголовок `X-Example-Header` со значением `example_value`,  пишем:
+For example, if we want our mocker to return an `X-Example-Header` header with an `example_value` value, we’ll write:
 
-```Json
+```JSON
 "responseHeaders": {
   "X-Example-Header": "example_value"
 }
@@ -204,53 +203,56 @@ URL должен начинатья с `/`
 
 ### `isDisabled`
 
-Флаг, который может перевести мок в состояние «выключен». Если значение `isDisabled == true`, мок не будет участвовать в выдаче.
+This flag is used to switch a mock “off”. If `isDisabled == true`, a mock will not be taken into account.
 
-Если значение `false` или `nil`, поведение стандартное.
+If the value is `false` or `nil`, all works as usual.
 
 ### `isOnly`
 
-Флаг, который отключает все моки, кроме одного конкретного. Если для какого-то мока `IsOnly == true`, то в выдаче будет участвовать **только** этот мок. Все остальные будут считаться «выключенными».
+This flag switches off all mocks except for the one selected. 
+If `IsOnly == true` for  mock, it will be the only mock taken into account. The others will be considered “switched off”.
 
-Если для мока одновременно `IsOnly == true` и `IsDisabled == true`, то значение `IsDisabled` игнорируется.
+If a mock has `IsOnly == true` and `IsDisabled == true` at the same time, `IsDisabled` is ignored.
 
-Если `IsOnly == true` одновременно для нескольких моков, **всегда** будет отдаваться **первый** по порядку мок. Никакого итерирования (пока, во всяком случае) нет.
+If several mocks have `IsOnly == true` at the same time, the first mock will always be the one you receive. 
+No iteration is available (at least for the time being).
 
-При этом счетчик итератора не сбрасывается. Если итератор указывал на n-й файл, то после включения и отключения `IsOnly` итератор все так же будет указывать на n-й мок.
+Please note that the iteration counter is not zeroed out. 
+If the iterator shows the n-th file, it will still be showing it even after the IsOnly is switched off and on again.
 
 ### `responseDelay`
 
-Это поле нужно для того, чтобы специально замедлить ответ сервера с конкретным моком.
+We need this field to delay a server response with a specific mock on purpose
 
-То есть все моки, у которых значение этого поля != 0, будут замедляться на указанное время. Время измеряется в секундах.
+In other words, all mocks with != 0 value in this field will be delayed by the time specified. The time should be given in seconds.
 
-По умолчанию: `0`
-
+Default value: `0`
 
 ### `isExcludedFromIteration`
 
-Это поле используется для того, чтобы исключить мок из итеративных ответов.
+This field is used to exclude a mock from iterative responses.
 
-Пример использования: когда у вас есть мок с заданным телом запроса и вы хотите чтоб он возвращался только в том случае, когда в запросе пришло именно это тело.
+Say, when you have a mock with a specific body of a query and you want it to be returned only if this exact body is matched.
 
-По-умолчанию: `false`
+Default state: `false`
  
-## Конфигурация
+## The Mocker is configured via environment variables:
 
-`Mocker` конфигурирется через переменные окружения:
+The `Mocker` is configured via environment variables:
 
-- `MOCKER_MOCKS_ROOT_DIR: string` — путь к папке, в которой лежат моки.
-- `MOCKER_SERVER_PORT: integer` — порт, на котором `Mocker` должен слушать подключения.
-- `MOCKER_LOG_PATH` — путь до файла, в который `Mocker` должен писать логи. Логи пишутся в формате `JSON`.
+- `MOCKER_MOCKS_ROOT_DIR: string` — a pathway to the folder containing all mocks.
+- `MOCKER_SERVER_PORT: integer` — a port on which the `Mocker` listens for connections.
+- `MOCKER_LOG_PATH` — a pathway to the file where the `Mocker` writes logs. Logs are written in `JSON`.
 
-## Как установить и начать использовать
 
-В корне репозитория содержатся следующие файлы:
-- `docker-compose.yaml` содержит всю необходимую конфигурацию и готов к запуску - `docker-compose up -d`.
-- `Dockerfile` содержит конфигурацию для запуска `Mocker`-а.
-- `FSWatherDockerfile` — контейнер, который слушает изменения в файловой системе (в папке, в которой лежат моки) и при изменениях автоматически делает запрос `GET /updateModels`.
+## How to Install and Get Started
 
-Во время запуска композа могут возникнуть ошибки вида `you try to mount directory to file (or vice versa)`. Если вы поймали такую ошибку, создайте вручную нужные файлы.
+You can find the following files in the root of the repository:
+- `docker-compose.yaml` contains all the necessary configurations and is ready to launch - `docker-compose up -d`.
+- `Dockerfile` contains configurations needed to launch `Mocker`.
+- `FSWatherDockerfile` —  a container listening for changes in the file system (in the folder where mocks are stored) and responding to changes with an automated query `GET /updateModels`.
+
+When launched, compose can return an error like `you try to mount directory to file (or vice versa)`. ЕIf you got this error, create all the necessary files manually.
 
 `.filebrowser_config.json`:
 ```JSON
@@ -264,12 +266,12 @@ URL должен начинатья с `/`
 }
 ```
 
-Во время работы просто добавьте в `.git/exclude` эти файлы.
+And then simply add the files to .git/exclude once you get down to work.
 
 ## Roadmap
 
-- Добавить поддержку `form-url` для `request` матчинга
+- Add support of `form-url` for `request` matching
 
 ## Contributing
 
-Буду рад багрепортам, фичареквестам и вашим PR-ам!
+I’d appreciate your bug reports, feature requests, and PRs!
