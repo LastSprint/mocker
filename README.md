@@ -11,8 +11,8 @@
 
 # Features
 
-- URL-Query prams matching — selects a mock depending on query parameters given in a query and in a mock.
-- JSON-Body prams matching — selects a mock depending on a JSON body in a query and in a mock.
+- URL-Query params matching — selects a mock depending on query parameters given in a query and in a mock.
+- JSON-Body params matching — selects a mock depending on a JSON body in a query and in a mock.
 - Caching Proxy — proxies client queries to an actual backend, records the result in a mock and returns it to the client.
 - Individual mocks or all mocks except for a selected one can be disabled.
 - Response can be delayed for a selected mock.
