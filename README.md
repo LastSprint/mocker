@@ -265,6 +265,30 @@ When launched, compose can return an error like `you try to mount directory to f
 
 And then simply add the files to .git/exclude once you get down to work.
 
+## File Server
+
+String prefix by-default is `/mfs` and it means `Mocker File Server`.
+
+How it works: 
+
+`Mocker` receives request - `https://mocker.youthost.com/mfs/projectName/featureName/picture.png`
+`Mocker` checks, if URL Path contains `mfs` as the first component, then other path will be used as a path to file. 
+
+For example lets we have file structure like this:
+- mocks_root_dir
+    -- projectA
+        -- checkout
+            -- mock1.json
+            -- img.png
+            -- file.pdf
+            
+Sp, URL Path for our files will be:
+
+- img.png -> `/mfs/projectA/checkout/img.png`
+- file.pdf -> `/mfs/projectA/checkout/file.pdf`
+
+You can server any type of content by this way.
+
 ## Roadmap
 
 - Add support of `form-url` for `request` matching
