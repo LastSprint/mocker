@@ -51,9 +51,18 @@ func main() {
 		logAnalytics(logFields, EventKeyUpdateModels)
 	}
 
-	http.HandleFunc("/", rootHandler)
+	router := &RequestRouter{
+		"mfs",
+		http.StripPrefix("/mfs", http.FileServer(http.Dir(configuration.MocksRootDir))),
+		rootHandler,
+	}
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", conf.Port), nil))
+	//http.Handl
+	//
+	//http.Handle("/mfs", http.StripPrefix("mfs", http.FileServer(http.Dir(configuration.MocksRootDir))))
+	////http.HandleFunc("/", rootHandler)
+	//http.Handler()
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", conf.Port), router))
 }
 
 // rootHandler do:
